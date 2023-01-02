@@ -1,0 +1,27 @@
+{
+  "name": "ludolfc",
+  "version": "1.0.0",
+  "description": "LudolfC programming language",
+  "main": "ludolfc.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludolf/ludolfc.git"
+  },
+  "keywords": [
+    "ludolf",
+    "programming",
+    "kids"
+  ],
+  "author": "Tomas Tulka (ttulka)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ludolf/ludolfc/issues"
+  },
+  "homepage": "https://github.com/ludolf/ludolfc#readme",
+  "devDependencies": {
+    "jest": "^29.3.1"
+  }
+}
