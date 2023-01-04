@@ -363,3 +363,286 @@ test('assignment error keywords localized', () => {
   expect(() => interpret.exec('jinak := 1')).toThrow()
   expect(() => interpret.exec('dokud := 1')).toThrow()
 })
+
+test('assignment not keywords', () => {
+  interpret.exec('_while := 123\nwhile_ := _while')
+  expect(interpret.variables.has('_while')).toBe(true)
+  expect(interpret.variables.get('_while').type).toBe('NUMBER')
+  expect(interpret.variables.get('_while').value).toBe(123)
+  expect(interpret.variables.has('while_')).toBe(true)
+  expect(interpret.variables.get('while_').type).toBe('NUMBER')
+  expect(interpret.variables.get('while_').value).toBe(123)
+})
+
+test('assignment simple bi expression plus', () => {
+  interpret.exec('a := 1 + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment simple bi expression minus', () => {
+  interpret.exec('a := 1 - 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-1)
+})
+
+test('assignment simple bi expression multiplication', () => {
+  interpret.exec('a := 2 * 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment simple bi expression division', () => {
+  interpret.exec('a := 6 / 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment simple bi expression gt', () => {
+  interpret.exec('a := 4 > 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression ge', () => {
+  interpret.exec('a := 3 >= 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression lt', () => {
+  interpret.exec('a := 2 < 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression le', () => {
+  interpret.exec('a := 2 <= 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression ne', () => {
+  interpret.exec('a := 2 != 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression ne false', () => {
+  interpret.exec('a := 2 != 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple bi expression eq', () => {
+  interpret.exec('a := 2 = 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression eq false', () => {
+  interpret.exec('a := 2 = 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple bi expression and', () => {
+  interpret.exec('a := true & true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression and false', () => {
+  interpret.exec('a := true & false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple bi expression or', () => {
+  interpret.exec('a := true | false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression or false', () => {
+  interpret.exec('a := false | false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple bi expression no spaces', () => {
+  interpret.exec('a:=2+3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment simple bi expression no spaces three members', () => {
+  interpret.exec('a:=2+3+1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment simple bi expression no spaces two-chars op three members', () => {
+  interpret.exec('a:=2!=3!=1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple bi expression three members', () => {
+  interpret.exec('a := 2 + 3 - 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(4)
+})
+
+test('assignment simple bi expression three members ref', () => {
+  interpret.exec('a := 1\nb := 2 + 3 - a')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(4)
+})
+
+test('assignment simple bi expression three members ref #2', () => {
+  interpret.exec('a := 1\nb := a + 1\nc := a + b + 3')
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(6)
+})
+
+test('assignment simple uni expression', () => {
+  interpret.exec('a := !false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression', () => {
+  interpret.exec('a := !false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression no spaces', () => {
+  interpret.exec('a:=!false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression two members', () => {
+  interpret.exec('a := !false | !true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression two members #2', () => {
+  interpret.exec('a := !false & !true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple uni expression three members', () => {
+  interpret.exec('a := !false & !true | !false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression three members #2', () => {
+  interpret.exec('a := 2 > 3 | !false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression three members #3', () => {
+  interpret.exec('a := 2 < 3 | !false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression three members #4', () => {
+  interpret.exec('a := 2 > 3 | !true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple uni expression three members #5', () => {
+  interpret.exec('a := 2 >= 3 | !true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple uni expression three members #6', () => {
+  interpret.exec('a := 2 <= 3 | !true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression var three members', () => {
+  interpret.exec('tr := true\nf := false\na := !f & !tr | !f')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple double uni expression', () => {
+  interpret.exec('a := !!true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple double uni expression var', () => {
+  interpret.exec('t := true\na := !!t')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple double uni expression var three members', () => {
+  interpret.exec('tr := true\nf := false\na := !!tr & !!f | !!tr')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple triple uni expression', () => {
+  interpret.exec('a := !!!true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple triple uni expression', () => {
+  interpret.exec('a := !!!false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})

@@ -5,6 +5,7 @@ const ERRORS = {
     UNREFERENCED_VARIABLE: 'UNREFERENCED_VARIABLE',
     UNEXPEXTED_KEYWORD: 'UNEXPEXTED_KEYWORD',
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
+    UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
 }
 
 const STATEMENTS = {
@@ -30,6 +31,10 @@ const KEYWORDS = {
     ELSE: ['else', 'jinak', 'sonst'],
     WHILE: ['while', 'dokud', 'soweit'],
 }
+
+// sorted by precedence
+const UNIOPERATORS = ['!']
+const BIOPERATORS = ['*', '/', '+', '-', '<', '<=', '>', '>=', '=', '!=', '&', '|']
 
 const RE_NATIONAL_CHARS = `ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ`
 const RE_IDENTIFIER = `[a-zA-Z_${RE_NATIONAL_CHARS}][a-zA-Z0-9_${RE_NATIONAL_CHARS}]*`
@@ -57,6 +62,41 @@ class Variable {
     }
 }
 
+class Operator {
+    constructor(op) {
+        this.op = op
+    }
+
+    uni(a) {
+        switch (this.op) {
+            case '!': return !a
+            default: throw new Error('Invalid uni operator ' + this.op)
+        }
+    }
+
+    bi(a, b) {
+        switch (this.op) {
+            case '*': return a * b
+            case '/': return a / b
+            case '+': return a + b
+            case '-': return a - b
+            case '<': return a < b
+            case '<=': return a <= b
+            case '>': return a > b
+            case '>=': return a >= b
+            case '=': return a === b // a == b
+            case '!=': return a !== b // a != b
+            case '&': return a && b
+            case '|': return a || b
+            default: throw new Error('Invalid bi operator ' + this.op)
+        }
+    }
+
+    toString() {
+        return this.op
+    }
+}
+
 class Source {
     constructor(code) {
         this.code = code + '\n'
@@ -65,9 +105,9 @@ class Source {
         this.col = 0
     }
 
-    move() {
-        this.pos++
-        this.col++
+    move(step = 1) {
+        this.pos += step
+        this.col += step
         if ('\n' === this.currentChar()) {
             this.row++
             this.col = 0
@@ -78,8 +118,8 @@ class Source {
         return this.code[this.pos]
     }
 
-    remaining() {
-        return this.code.substring(this.pos)
+    remaining(length = undefined) {
+        return this.code.substring(this.pos, this.pos + length)
     }
 
     finished() {
@@ -168,24 +208,55 @@ class LudolfC {
     }
 
     _execExpression(source) {
-        const tokens = []
+        const members = []
+        const uniops = []
+        const biops = []
 
         while (!source.finished()) {
             const c = source.currentChar()
 
-            if ('\n' === c) {
-                // TODO evaluate the list of tokens
-                if (tokens.length) {
-                    return tokens[0]
+            // expression's end
+            if (isStatementSeparator(c)) {
+                // evaluate the list of tokens
+                if (members.length) {
+                    if (members.length !== biops.length + 1) {
+                        throw new LangError(ERRORS.UNEVEN_OPERATORS, source.row, source.col)
+                    }
+                    return members.reduce((a,c,i) => i === 0 ? c : biops[i - 1].bi(a, c), 0)
                 }
             }
 
-            if (/\s+/g.test(c)) {
+            if (isSpace(c)) {
                 source.move()
                 continue
             }
 
-            tokens.push(this._execMemberExpression(source))
+            const next2 = source.remaining(2)
+            if (BIOPERATORS.includes(next2)) {
+                biops.push(new Operator(next2))
+                source.move(2)
+                continue
+            }
+            const next1 = source.remaining(1)
+            if (BIOPERATORS.includes(next1)) {
+                biops.push(new Operator(next1))
+                source.move()
+                continue
+            }
+            if (UNIOPERATORS.includes(next1)) {
+                uniops.push(new Operator(next1))
+                source.move()
+                continue
+            }
+
+            let mexp = this._execMemberExpression(source)
+
+            if (uniops.length) {
+                mexp = uniops.reduceRight((a,c) => c.uni(a), mexp)
+                uniops.length = 0
+            }
+
+            members.push(mexp)
         }
     }
 
@@ -199,7 +270,7 @@ class LudolfC {
             const c = source.currentChar()
 
             // token ends
-            if (!inString && /\s+/g.test(c)) {
+            if (!inString && isExpressionSeparator(c)) {
                 if (KEYWORDS.TRUE.includes(token.toLowerCase())) {
                     return true
     
@@ -258,6 +329,19 @@ function isNumeric(str) {
 function isKeyword(str) {
     str = str.toLowerCase()
     return Object.values(KEYWORDS).some(kw => kw.includes(str))
+}
+
+function isSpace(c) {
+    return '\n' !== c && /\s+/g.test(c)
+}
+
+function isExpressionSeparator(c) {
+    return isSpace(c) || isStatementSeparator(c) 
+        || BIOPERATORS.some(op => op.startsWith(c)) || UNIOPERATORS.some(op => op.startsWith(c))
+}
+
+function isStatementSeparator(c) {
+    return '\n' === c || ';' === c
 }
 
 module.exports = LudolfC
