@@ -646,3 +646,73 @@ test('assignment simple triple uni expression', () => {
   expect(interpret.variables.get('a').type).toBe('BOOLEAN')
   expect(interpret.variables.get('a').value).toBe(true)
 })
+
+test('assignment simple uni expression minus', () => {
+  interpret.exec('a := -1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-1)
+})
+
+test('assignment simple uni expression minus #2', () => {
+  interpret.exec('a := -123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-123)
+})
+
+test('assignment simple uni expression minus #3', () => {
+  interpret.exec('a := 123 > -123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression minus #4', () => {
+  interpret.exec('a := -123 > -123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple uni expression minus #4', () => {
+  interpret.exec('a := -123 >= -123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression minus #5', () => {
+  interpret.exec('a:=-123>=-123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression minus #6', () => {
+  interpret.exec('a := --123 >= --123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression minus #7', () => {
+  interpret.exec('a := --123 >= ---123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple uni expression minus #8', () => {
+  interpret.exec('a := ---123 >= --123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment simple uni expression minus #9', () => {
+  interpret.exec('a :=---123')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-123)
+})

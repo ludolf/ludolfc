@@ -32,8 +32,7 @@ const KEYWORDS = {
     WHILE: ['while', 'dokud', 'soweit'],
 }
 
-// sorted by precedence
-const UNIOPERATORS = ['!']
+const UNIOPERATORS = ['!', '-']
 const BIOPERATORS = ['*', '/', '+', '-', '<', '<=', '>', '>=', '=', '!=', '&', '|']
 
 const RE_NATIONAL_CHARS = `ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ`
@@ -70,6 +69,7 @@ class Operator {
     uni(a) {
         switch (this.op) {
             case '!': return !a
+            case '-': return -a
             default: throw new Error('Invalid uni operator ' + this.op)
         }
     }
@@ -232,21 +232,25 @@ class LudolfC {
             }
 
             const next2 = source.remaining(2)
-            if (BIOPERATORS.includes(next2)) {
-                biops.push(new Operator(next2))
-                source.move(2)
-                continue
-            }
             const next1 = source.remaining(1)
-            if (BIOPERATORS.includes(next1)) {
-                biops.push(new Operator(next1))
-                source.move()
-                continue
-            }
-            if (UNIOPERATORS.includes(next1)) {
-                uniops.push(new Operator(next1))
-                source.move()
-                continue
+
+            if (biops.length === members.length) {
+                if (UNIOPERATORS.includes(next1)) {
+                    uniops.push(new Operator(next1))
+                    source.move()
+                    continue
+                }
+            } else {
+                if (BIOPERATORS.includes(next2)) {
+                    biops.push(new Operator(next2))
+                    source.move(2)
+                    continue
+                }
+                if (BIOPERATORS.includes(next1)) {
+                    biops.push(new Operator(next1))
+                    source.move()
+                    continue
+                }
             }
 
             let mexp = this._execMemberExpression(source)
