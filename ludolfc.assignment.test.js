@@ -839,3 +839,17 @@ test('assignment op precedence #16', () => {
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(9)
 })
+
+test('assignment op precedence #17', () => {
+  interpret.exec('a := --1 + 1 - -1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment op precedence #18', () => {
+  interpret.exec('a := -1 - --1 * -1 * -1 - -1 - --1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-2)
+})
