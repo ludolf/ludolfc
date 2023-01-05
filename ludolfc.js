@@ -33,7 +33,7 @@ const KEYWORDS = {
 }
 
 const UNIOPERATORS = ['!', '-']
-const BIOPERATORS = ['*', '/', '+', '-', '<', '<=', '>', '>=', '=', '!=', '&', '|']
+const BIOPERATORS = ['*', '/', '%', '+', '-', '<', '<=', '>', '>=', '=', '!=', '&', '|']
 
 const RE_NATIONAL_CHARS = `ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ`
 const RE_IDENTIFIER = `[a-zA-Z_${RE_NATIONAL_CHARS}][a-zA-Z0-9_${RE_NATIONAL_CHARS}]*`
@@ -64,6 +64,7 @@ class Variable {
 class Operator {
     constructor(op) {
         this.op = op
+        this.precedence = this._precedence()
     }
 
     uni(a) {
@@ -78,6 +79,7 @@ class Operator {
         switch (this.op) {
             case '*': return a * b
             case '/': return a / b
+            case '%': return a % b
             case '+': return a + b
             case '-': return a - b
             case '<': return a < b
@@ -89,6 +91,25 @@ class Operator {
             case '&': return a && b
             case '|': return a || b
             default: throw new Error('Invalid bi operator ' + this.op)
+        }
+    }
+
+    _precedence() { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+        switch (this.op) {
+            case '*':
+            case '/':
+            case '%': return 12
+            case '+': 
+            case '-': return 11
+            case '<': 
+            case '<=':
+            case '>':
+            case '>=': return 9
+            case '=': 
+            case '!=': return 8
+            case '&': return 4
+            case '|': return 3
+            default: -1
         }
     }
 
@@ -215,14 +236,13 @@ class LudolfC {
         while (!source.finished()) {
             const c = source.currentChar()
 
-            // expression's end
             if (isStatementSeparator(c)) {
                 // evaluate the list of tokens
                 if (members.length) {
                     if (members.length !== biops.length + 1) {
                         throw new LangError(ERRORS.UNEVEN_OPERATORS, source.row, source.col)
                     }
-                    return members.reduce((a,c,i) => i === 0 ? c : biops[i - 1].bi(a, c), 0)
+                    return applyOperators(members, biops)
                 }
             }
 
@@ -261,6 +281,35 @@ class LudolfC {
             }
 
             members.push(mexp)
+        }
+
+        function applyOperators(members, ops) {
+            let result = members[0]
+            let opIndex
+            while ((opIndex = findNextOp(ops)) > -1) {
+                result = ops[opIndex].bi(members[opIndex], members[opIndex + 1])
+                ops = removeElementAt(ops, opIndex)
+                members = removeElementAt(members, opIndex)
+                members[opIndex] = result
+            }
+            return result
+
+            function findNextOp(ops) {
+                let index = -1
+                let max = Number.MIN_SAFE_INTEGER
+                for (let i = 0; i < ops.length; i++) {
+                    const op = ops[i]
+                    if (max < op.precedence) {
+                        index = i
+                        max = op.precedence
+                    }
+                }
+                return index
+            }
+
+            function removeElementAt(arr, index) {
+                return arr.filter((v,i) => i !== index)
+            }
         }
     }
 

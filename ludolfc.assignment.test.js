@@ -36,6 +36,13 @@ test('assignment number simplest national chars #2', () => {
   expect(interpret.variables.get('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ').value).toBe(256)
 })
 
+test('assignment number simplest national chars #4', () => {
+  interpret.exec('Ř := 256')
+  expect(interpret.variables.has('Ř')).toBe(true)
+  expect(interpret.variables.get('Ř').type).toBe('NUMBER')
+  expect(interpret.variables.get('Ř').value).toBe(256)
+})
+
 test('assignment number simplest float', () => {
   interpret.exec('a := 25.16')
   expect(interpret.variables.has('a')).toBe(true)
@@ -286,6 +293,10 @@ test('assignment error wrong var name #3', () => {
 
 test('assignment error wrong var name #4', () => {
   expect(() => interpret.exec('1aa_bb := 2')).toThrow()
+})
+
+test('assignment error wrong var name #5', () => {
+  expect(() => interpret.exec('💩 := 2')).toThrow()
 })
 
 test('assignment error wrong value', () => {
@@ -715,4 +726,116 @@ test('assignment simple uni expression minus #9', () => {
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(-123)
+})
+
+test('assignment op precedence', () => {
+  interpret.exec('a := 3 / 9 * 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment op precedence #2', () => {
+  interpret.exec('a := 1 + 2 * 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(7)
+})
+
+test('assignment op precedence #3', () => {
+  interpret.exec('a := 1 * 2 + 3')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment op precedence #4', () => {
+  interpret.exec('a := 1 + 6 / 3 + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment op precedence #5', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment op precedence #6', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #7', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1 != false')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #8', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1 != false & 2 <= 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment op precedence #9', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1 != false & 1 <= 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #10', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1 != false & 123 <= 1 | 12 + 11 * -1 = 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #11', () => {
+  interpret.exec('a := 1 + 6 % 3 + 2 > 1 != !false & 123 <= 1 | 12 + 11 * -1 >= 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment op precedence #12', () => {
+  interpret.exec('x := 2\na := 1 + 6 % 3 + x > 1 != !false & 123 <= 1 | 12 + 11 * -1 >= x')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment op precedence #13', () => {
+  interpret.exec('_1 := 1\n_2 := 2\na := _1 + 6 % 3 + _2 > _1 != false & 123 <= _1 | 12 + 11 * -_1 = _1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #14', () => {
+  interpret.exec('_1 := 1\n_2 := 2\na := _1 + 6 % 3 + _2 > _1 != !!false & 123 <= _1 | 12 + 11 * ---_1 = _1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment op precedence #15', () => {
+  interpret.exec('a := 1 + 2 + 3 * 3 - 2 - 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(9)
+})
+
+test('assignment op precedence #16', () => {
+  interpret.exec('a := 1 + 2 + 3 * 3 / 3 * 3 - 2 - 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(9)
 })
