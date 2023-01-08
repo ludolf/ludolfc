@@ -155,13 +155,18 @@ class LudolfC {
 
     exec(code) {
         this.variables.clear()
-        this._execProgram(new Source(code))
+        return this._execProgram(new Source(code))
     }
 
     _execProgram(source) {
+        let result = null
         while (!source.finished()) {
-            this._execStatement(source)
+            const r = this._execStatement(source)
+            if (r != null) {
+                result = r
+            }
         }
+        return result
     }
 
     _execStatement(source) {
@@ -175,7 +180,18 @@ class LudolfC {
         for (; !source.finished(); source.move()) {
             const c = source.currentChar()
             
-            if (!expecting && /\s+/g.test(c)) continue
+            // consume the whole string to prevent space-ignoring
+            if (!inAssignment && !inArray && !inObject && isStringStarting(c)) {
+                let cc = c
+                do {
+                    token += cc
+                    source.move()
+                    cc = source.currentChar()
+                } while (!source.finished() && !isStringEnding(cc, c))
+            }
+            
+            // ignore spaces
+            if (!expecting && isSpace(c)) continue
 
             if (expecting && c !== expecting) {
                 throw new LangError(ERRORS.EXPEXTED_SYMBOL, source.row, source.col, expecting, c)
@@ -184,6 +200,12 @@ class LudolfC {
                 inAssignment = true
                 expecting = null
                 continue
+            }
+
+            // end of the statement
+            if (isStatementSeparator(c)) {
+                source.move()
+                break
             }
 
             if (':' === c) {
@@ -226,6 +248,11 @@ class LudolfC {
         if (inAssignment || inArray || inObject) {
             throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
         }
+
+        // statement is an expression
+        if (token.length) {
+            return this._execExpression(new Source(token))
+        }
     }
 
     _execExpression(source, inGrouping = false) {
@@ -263,6 +290,7 @@ class LudolfC {
                     }
                     return applyOperators(members, biops)
                 }
+                source.move()
                 continue
             }
 
@@ -361,7 +389,7 @@ class LudolfC {
                     throw new LangError(ERRORS.UNREFERENCED_VARIABLE, source.row, source.col, token)
                 }
             } else
-            if (c === '"' || c === '“' || c === '”' || c === "'") {
+            if (isStringStarting(c)) {
                 source.move()
                 return readSting(source, c)
             }
@@ -374,7 +402,7 @@ class LudolfC {
             for (; !source.finished(); source.move()) {
                 const c = source.currentChar()
 
-                if (quoting === c || (c === '”' && quoting === '“')) {
+                if (isStringEnding(c, quoting)) {
                     source.move()
                     return token
                 }
@@ -417,6 +445,14 @@ function isExpressionSeparator(c) {
 
 function isStatementSeparator(c) {
     return '\n' === c || ';' === c
+}
+
+function isStringStarting(c) {
+    return c === '"' || c === '“' || c === '”' || c === "'"
+}
+
+function isStringEnding(c, quoting) {
+    return quoting === c || (c === '”' && quoting === '“')
 }
 
 module.exports = LudolfC

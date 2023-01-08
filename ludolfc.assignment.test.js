@@ -65,7 +65,7 @@ test('assignment number simplest no spaces #2', () => {
 })
 
 test('assignment number simplest space chars', () => {
-  interpret.exec('\t\n\n \na\t \t\n:=\n\n1\t\t')
+  interpret.exec('\t\n\n \na\t \t := \t  1\t\t\n\n\n')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(1)
@@ -132,6 +132,20 @@ test('assignment string spaces', () => {
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('STRING')
   expect(interpret.variables.get('a').value).toBe('   a b  c    ')
+})
+
+test('assignment string spaces #2', () => {
+  interpret.exec(`a := ("   a b  c    ")`)
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('STRING')
+  expect(interpret.variables.get('a').value).toBe('   a b  c    ')
+})
+
+test('assignment string spaces #3', () => {
+  interpret.exec(`a := ("   a b  c \t\n  \n  ")`)
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('STRING')
+  expect(interpret.variables.get('a').value).toBe('   a b  c \t\n  \n  ')
 })
 
 test('assignment string tabs', () => {
@@ -946,4 +960,12 @@ test('assignment error grouping #5', () => {
 
 test('assignment error grouping #6', () => {
   expect(() => interpret.exec('a := (1 + (2 + 3)')).toThrow()
+})
+
+test('assignment error grouping #7', () => {
+  expect(() => interpret.exec('a := ()')).toThrow()
+})
+
+test('assignment error grouping #8', () => {
+  expect(() => interpret.exec('a := (())')).toThrow()
 })
