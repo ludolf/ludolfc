@@ -853,3 +853,97 @@ test('assignment op precedence #18', () => {
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(-2)
 })
+
+test('assignment grouping', () => {
+  interpret.exec('a := (1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment grouping #2', () => {
+  interpret.exec('a := ((1))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment grouping #3', () => {
+  interpret.exec('a := (((123)))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(123)
+})
+
+test('assignment grouping precedence', () => {
+  interpret.exec('a := (1 + 6) / (3 + 2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1.4)
+})
+
+test('assignment grouping precedence #2', () => {
+  interpret.exec('a := ((1 + 6)) / (3 + 2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1.4)
+})
+
+test('assignment grouping precedence #3', () => {
+  interpret.exec('a := (((1 + 6)) / (3 + 2))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1.4)
+})
+
+test('assignment grouping precedence #4', () => {
+  interpret.exec('a := (1 + (2) + 3)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment grouping precedence #5', () => {
+  interpret.exec('_1 := 1\na := (((_1) + 3) / ((3) + _1))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment grouping precedence #6', () => {
+  interpret.exec('_1 := (1) + 0\na := (((_1) + 3) / ((3) + _1))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment grouping precedence #7', () => {
+  interpret.exec('_1 := 1\n_2 := 2\na := ((((((((_1 + 6)) % ((3) + _2)) > _1) != !((!false))) & (123 <= _1))) | ((12 + 10) * ---_1 = _1 * -22))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment error grouping', () => {
+  expect(() => interpret.exec('a := ((1)')).toThrow()
+})
+
+test('assignment error grouping #2', () => {
+  expect(() => interpret.exec('a := (1))')).toThrow()
+})
+
+test('assignment error grouping #3', () => {
+  expect(() => interpret.exec('a := (1')).toThrow()
+})
+
+test('assignment error grouping #4', () => {
+  expect(() => interpret.exec('a := 1)')).toThrow()
+})
+
+test('assignment error grouping #5', () => {
+  expect(() => interpret.exec('a := (1+)(2)')).toThrow()
+})
+
+test('assignment error grouping #6', () => {
+  expect(() => interpret.exec('a := (1 + (2 + 3)')).toThrow()
+})

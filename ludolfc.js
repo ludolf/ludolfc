@@ -228,15 +228,34 @@ class LudolfC {
         }
     }
 
-    _execExpression(source) {
+    _execExpression(source, inGrouping = false) {
         const members = []
         const uniops = []
         const biops = []
 
+        let expected = null
+
         while (!source.finished()) {
             const c = source.currentChar()
 
-            if (isStatementSeparator(c)) {
+            if (isSpace(c)) {
+                source.move()
+                continue
+            }
+
+            if (expected) {
+                if (c === expected) {  
+                    expected = null
+                    source.move()                  
+                    continue
+                }
+                throw new LangError(ERRORS.EXPEXTED_SYMBOL, source.row, source.col, expected)
+            }
+
+            if (isStatementSeparator(c) || ')' === c) {
+                if (')' === c && (!inGrouping || !members.length)) {
+                    throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                }
                 // evaluate the list of tokens
                 if (members.length) {
                     if (members.length !== biops.length + 1) {
@@ -244,10 +263,13 @@ class LudolfC {
                     }
                     return applyOperators(members, biops)
                 }
+                continue
             }
 
-            if (isSpace(c)) {
+            if ('(' === c) {
+                expected = ')'
                 source.move()
+                members.push(this._execExpression(source, true))
                 continue
             }
 
@@ -316,14 +338,11 @@ class LudolfC {
     _execMemberExpression(source) {
         let token = ''
 
-        let quoting = null
-        let inString = false
-
         for (; !source.finished(); source.move()) {
             const c = source.currentChar()
 
             // token ends
-            if (!inString && isExpressionSeparator(c)) {
+            if (isExpressionSeparator(c)) {
                 if (KEYWORDS.TRUE.includes(token.toLowerCase())) {
                     return true
     
@@ -341,24 +360,27 @@ class LudolfC {
                     }
                     throw new LangError(ERRORS.UNREFERENCED_VARIABLE, source.row, source.col, token)
                 }
-            }
-
-            if (inString) {
-                if (quoting === c || (c === '”' && quoting === '“')) {
-                    inString = false
-                    quoting = null
-                    source.move()
-                    return token
-                }
-
             } else
             if (c === '"' || c === '“' || c === '”' || c === "'") {
-                inString = true
-                quoting = c
-                continue
+                source.move()
+                return readSting(source, c)
             }
 
             token += c
+        }
+
+        function readSting(source, quoting) {
+            let token = ''
+            for (; !source.finished(); source.move()) {
+                const c = source.currentChar()
+
+                if (quoting === c || (c === '”' && quoting === '“')) {
+                    source.move()
+                    return token
+                }
+                token += c
+            }
+            throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
         }
     }
 
@@ -389,7 +411,7 @@ function isSpace(c) {
 }
 
 function isExpressionSeparator(c) {
-    return isSpace(c) || isStatementSeparator(c) 
+    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c 
         || BIOPERATORS.some(op => op.startsWith(c)) || UNIOPERATORS.some(op => op.startsWith(c))
 }
 
