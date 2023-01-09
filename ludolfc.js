@@ -135,6 +135,7 @@ class ValueObject {
             this.ge = x => value >= x
             this.eq = x => value === x
             this.ne = x => value !== x
+            this.sum = (...x) => x.reduce((a,c) => a + c, value)
         } else
         if (typeof value === 'string') {
             this.concat = x => value + x
@@ -319,7 +320,7 @@ class LudolfC {
                 throw new LangError(ERRORS.EXPEXTED_SYMBOL, source.row, source.col, expected)
             }
 
-            if (isStatementSeparator(c) || ')' === c) {
+            if (isStatementSeparator(c) || ')' === c || ',' === c) {
                 if (')' === c && (!inGrouping || !members.length)) {
                     throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 }
@@ -335,19 +336,8 @@ class LudolfC {
             }
 
             if ('(' === c) {
-                expected = ')'
                 source.move()
-                members.push(this._execExpression(source, true))
-                continue
-            }
-
-            if ('.' === c && members.length && biops.length === members.length - 1) {
-                applyAttributeOp(source, members)
-                consumeSpaces(source)
-
-                // apply function call
-                if ('(' === source.currentChar()) {
-                    source.move()
+                if (rightOperatorExpected()) {    // a function call
                     const params = this._readParams(source)  
                     consumeSpaces(source)
     
@@ -360,11 +350,29 @@ class LudolfC {
                     } else {
                         throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
                     }
+                } else {    // grouping
+                    expected = ')'
+                    members.push(this._execExpression(source, true))
                 }
                 continue
             }
 
-            if (biops.length === members.length) {
+            if ('.' === c && rightOperatorExpected()) {
+                source.move()
+                const attrName = this._readIdentifier(source)
+                const idx = members.length - 1
+                members[idx] = (isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx])[attrName]
+                
+                consumeSpaces(source)
+
+                // apply function call
+                if ('(' === source.currentChar()) {
+                    
+                }
+                continue
+            }
+
+            if (leftOperatorExpected()) {
                 if (UNIOPERATORS.includes(c)) {
                     if (!uniops[members.length]) uniops[members.length] = []
                     uniops[members.length].push(new Operator(c))    // index of the operator is the same as of the member to be applied to
@@ -372,7 +380,7 @@ class LudolfC {
                     continue
                 }
             } else
-            if (biops.length === members.length - 1) {
+            if (rightOperatorExpected()) {
                 const next2 = source.remaining(2)
                 if (BIOPERATORS.includes(next2)) {
                     biops.push(new Operator(next2))
@@ -386,16 +394,15 @@ class LudolfC {
                 }
             }
 
-            let mexp = this._execMemberExpression(source)
-
-            members.push(mexp)
+            members.push(this._execMemberExpression(source))
         }
 
-        function applyAttributeOp(source, members) {
-            source.move()
-            const attrName = readIdentifier(source)
-            const idx = members.length - 1
-            members[idx] = (isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx])[attrName]
+        function leftOperatorExpected() {
+            return members.length === biops.length
+        }
+
+        function rightOperatorExpected() {
+            return members.length && members.length === biops.length + 1
         }
 
         function applyOperators(members, biops, uniops) {
@@ -423,22 +430,6 @@ class LudolfC {
                 }
                 return index
             }
-
-            function removeElementAt(arr, index) {
-                return arr.filter((v,i) => i !== index)
-            }
-        }
-
-        function readIdentifier(source) {
-            let token = ''
-            for (; !source.finished(); source.move()) {
-                const c = source.currentChar()
-                if (isSpace(c)) continue
-                if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token + c)) break                
-                token += c
-            }
-            if (token) return token
-            throw new LangError(ERRORS.EXPECTED_IDENTIFIER, source.row, source.col)
         }
     }
 
@@ -473,24 +464,10 @@ class LudolfC {
             } else
             if (isStringStarting(c)) {
                 source.move()
-                return readSting(source, c)
+                return this._readString(source, c)
             }
 
             token += c
-        }
-
-        function readSting(source, quoting) {
-            let token = ''
-            for (; !source.finished(); source.move()) {
-                const c = source.currentChar()
-
-                if (isStringEnding(c, quoting)) {
-                    source.move()
-                    return token
-                }
-                token += c
-            }
-            throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
         }
     }
     
@@ -498,11 +475,42 @@ class LudolfC {
         consumeSpaces(source)
         if (')' === source.currentChar()) {
             return []
-        } else {
-            // TODO multiple params
-            const p = this._execExpression(source, true)
-            return [p]
+        } else {    // multiple params
+            const params = []
+            do {
+                params.push(this._execExpression(source, true))
+                consumeSpaces(source)
+
+            } while(',' === source.currentChar())
+
+            return params
         }
+    }
+
+    _readString(source, quoting) {
+        let token = ''
+        for (; !source.finished(); source.move()) {
+            const c = source.currentChar()
+
+            if (isStringEnding(c, quoting)) {
+                source.move()
+                return token
+            }
+            token += c
+        }
+        throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
+    }
+
+    _readIdentifier(source) {
+        let token = ''
+        for (; !source.finished(); source.move()) {
+            const c = source.currentChar()
+            if (isSpace(c)) continue
+            if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token + c)) break                
+            token += c
+        }
+        if (token) return token
+        throw new LangError(ERRORS.EXPECTED_IDENTIFIER, source.row, source.col)
     }
 
     _execCondition(source) {
@@ -532,7 +540,7 @@ function isSpace(c) {
 }
 
 function isExpressionSeparator(c) {
-    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c || '[' === c || ']' === c || '.' === c
+    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c || '[' === c || ']' === c || '.' === c || ',' === c
         || BIOPERATORS.some(op => op.startsWith(c)) || UNIOPERATORS.some(op => op.startsWith(c))
 }
 
@@ -554,6 +562,10 @@ function isPrimitive(value) {
 
 function consumeSpaces(source) {
     for (; !source.finished() && isSpace(source.currentChar()); source.move()) { }
+}
+
+function removeElementAt(arr, index) {
+    return arr.filter((_, i) => i !== index)
 }
 
 module.exports = LudolfC

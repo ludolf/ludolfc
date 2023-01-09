@@ -1383,9 +1383,96 @@ test('assignment func simple #47', () => {
   expect(interpret.variables.get('a').value).toBe(true)
 })
 
+test('assignment func simple #48', () => {
+  interpret.exec('a := 123.plus(((12)))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(135)
+})
+
 test('assignment func multiple params', () => {
   interpret.exec('a := (123.plus((((10.plus(((50 + 5))))))) - 8) + 1')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(181)
+})
+
+test('assignment func double params', () => {
+  interpret.exec('a := 1.sum(2,3)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment func double params spaces', () => {
+  interpret.exec('a := 1.sum(  2   ,    3    )')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment func double params #2', () => {
+  interpret.exec('a := 1.sum((2), (3))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment func double params #3', () => {
+  interpret.exec('a := 1.sum((2 - 1), (3 + 1))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment func double params #4', () => {
+  interpret.exec('a := 1.sum(2.minus(1), (3.plus(1))).minus(1) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+})
+
+test('assignment func triple params', () => {
+  interpret.exec('a := 123.sum(12,2,55) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(193)
+})
+
+test('assignment func triple params #2', () => {
+  interpret.exec('a := 1.sum(2.minus(1), (3.plus(1)), 123).minus(1) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(129)
+})
+
+test('assignment func triple params var', () => {
+  interpret.exec('x := 123\na := x.sum(2.minus(1), (3.plus(1)), x).minus(1) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(251)
+})
+
+test('assignment error func multi params', () => {
+  expect(() => interpret.exec('a := 1.sum((2,3))')).toThrow()
+})
+
+test('assignment error func multi params #2', () => {
+  expect(() => interpret.exec('a := 1.sum((2,3)')).toThrow()
+})
+
+test('assignment error func multi params #3', () => {
+  expect(() => interpret.exec('a := 1.sum((2, 3)')).toThrow()
+})
+
+test('assignment error func multi params #4', () => {
+  expect(() => interpret.exec('a := 1.sum((123, (2), 3))')).toThrow()
+})
+
+test('assignment error func multi params #5', () => {
+  expect(() => interpret.exec('a := 1.sum(123, (2, 3))')).toThrow()
+})
+
+test('assignment error func multi params #6', () => {
+  expect(() => interpret.exec('a := 1.sum((123, 2), 3)')).toThrow()
 })

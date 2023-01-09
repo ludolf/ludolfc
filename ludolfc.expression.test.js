@@ -144,3 +144,11 @@ test('expression func call grouping', () => {
 test('expression func call grouping spaces', () => {
   expect(interpret.exec('  ( 123 . plus ( ( ( ( 10 . plus ( (   (  50  +5 )  ) ) ) )   ) )  -   8   )+ 1+0. plus( 1  )+1   .plus (  0)')).toBe(183)
 })
+
+test('expression func call double params', () => {
+  expect(interpret.exec('1.sum(2.minus(1), (3.plus(1))).minus(1) + 1')).toBe(6)
+})
+
+test('expression func call double params spaces', () => {
+  expect(interpret.exec('    1 .   sum  (  2  .  minus ( 1   )   ,( 3  .plus ( 1)  )).minus   (1)+1')).toBe(6)
+})
