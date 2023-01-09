@@ -15,6 +15,20 @@ test('assignment number simplest #2', () => {
   expect(interpret.variables.get('a').value).toBe(256)
 })
 
+test('assignment number simplest #3', () => {
+  interpret.exec('a := 1.2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1.2)
+})
+
+test('assignment number simplest #4', () => {
+  interpret.exec('a := 256.12')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(256.12)
+})
+
 test('assignment number simplest underscore varname', () => {
   interpret.exec('_ := 256')
   expect(interpret.variables.has('_')).toBe(true)
@@ -406,8 +420,22 @@ test('assignment simple bi expression plus', () => {
   expect(interpret.variables.get('a').value).toBe(3)
 })
 
+test('assignment simple bi expression plus #2', () => {
+  interpret.exec('a := 1.5 + 2.5')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(4)
+})
+
 test('assignment simple bi expression minus', () => {
   interpret.exec('a := 1 - 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-1)
+})
+
+test('assignment simple bi expression minus #2', () => {
+  interpret.exec('a := 1.5 - 2.5')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(-1)
@@ -420,11 +448,25 @@ test('assignment simple bi expression multiplication', () => {
   expect(interpret.variables.get('a').value).toBe(6)
 })
 
+test('assignment simple bi expression multiplication #2', () => {
+  interpret.exec('a := 2.5 * 3.5')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(8.75)
+})
+
 test('assignment simple bi expression division', () => {
   interpret.exec('a := 6 / 3')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment simple bi expression division #2', () => {
+  interpret.exec('a := 6.8 / 3.2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2.125)
 })
 
 test('assignment simple bi expression gt', () => {
@@ -932,10 +974,17 @@ test('assignment grouping precedence #6', () => {
 })
 
 test('assignment grouping precedence #7', () => {
-  interpret.exec('_1 := 1\n_2 := 2\na := ((((((((_1 + 6)) % ((3) + _2)) > _1) != !((!false))) & (123 <= _1))) | ((12 + 10) * ---_1 = _1 * -22))')
+  interpret.exec('_1 := 1\n_2 := 2\na := ((((((((_1 + 6)) % ((3) + _2)) > _1) != !((!false))) & (123.23 <= _1))) | ((12 + 10) * ---_1 = _1 * -22))')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('BOOLEAN')
   expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment grouping precedence #8', () => {
+  interpret.exec('a := (1.5 + (2.6) + 3.7)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(7.8)
 })
 
 test('assignment error grouping', () => {
@@ -968,4 +1017,375 @@ test('assignment error grouping #7', () => {
 
 test('assignment error grouping #8', () => {
   expect(() => interpret.exec('a := (())')).toThrow()
+})
+
+test('assignment func simple', () => {
+  interpret.exec('a := 1.plus(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment func simple #2', () => {
+  interpret.exec('a := 1.plus(2) + 4')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(7)
+})
+
+test('assignment func simple #3', () => {
+  interpret.exec('a := 5 + 1.plus(2) + 4')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(12)
+})
+
+test('assignment func simple #4', () => {
+  interpret.exec('a := !true.neg()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #5', () => {
+  interpret.exec('a := !!true.neg()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #6', () => {
+  interpret.exec('a := !1.gt(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #7', () => {
+  interpret.exec('a := !!1.gt(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #8', () => {
+  interpret.exec('a := !!1.gt(2) | true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #9', () => {
+  interpret.exec('a := false & !1.gt(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #10', () => {
+  interpret.exec('a := 123.plus(23) + 12.minus(11) * 12.minus(10)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(148)
+})
+
+test('assignment func simple #11', () => {
+  interpret.exec('a := 123.plus(12.minus(10) * 12.minus(9))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(129)
+})
+
+test('assignment func simple #12', () => {
+  interpret.exec('a := 123.plus(10).plus(55)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(188)
+})
+
+test('assignment func simple #13', () => {
+  interpret.exec('a := 123.plus(10).plus(55).minus(88) + 123.plus(10).plus(55).minus(88)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(200)
+})
+
+test('assignment func simple #14', () => {
+  interpret.exec('a := 123.plus(10).plus(55).minus(88).plus(123.plus(10).plus(55).minus(88))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(200)
+})
+
+test('assignment func simple #15', () => {
+  interpret.exec('a := 1 - 123.plus(10).plus(55).minus(88).plus(123.plus(10).plus(55).minus(88)) + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-197)
+})
+
+test('assignment func simple #15 spaces', () => {
+  interpret.exec('a := 1 - 123 . plus ( 10 ) . plus ( 55 ) . minus ( 88 ) . plus ( 123 . plus ( 10 ) . plus ( 55 ) . minus(88) ) + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-197)
+})
+
+test('assignment func simple #15 vars', () => {
+  interpret.exec('_123:=123\n_10:=10\na := 1 - _123 . plus ( _10 ) . plus ( 55 ) . minus ( 88 ) . plus ( _123 . plus ( _10 ) . plus ( 55 ) . minus(88) ) + 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(-197)
+})
+
+test('assignment func simple #16', () => {
+  interpret.exec('a := 123.plus(10.plus(55))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(188)
+})
+
+test('assignment func simple #16 grouping', () => {
+  interpret.exec('a := 123.plus((((10.plus(55)))))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(188)
+})
+
+test('assignment func simple #16 grouping #2', () => {
+  interpret.exec('a := 123.plus((((10.plus(((50 + 5)))))))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(188)
+})
+
+test('assignment func simple #16 grouping #3', () => {
+  interpret.exec('a := (123.plus((((10.plus(((50 + 5))))))) - 8) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(181)
+})
+
+test('assignment func simple #17', () => {
+  interpret.exec('a := 5.mod(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment func simple #18', () => {
+  interpret.exec('a := 5.mult(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(10)
+})
+
+test('assignment func simple #19', () => {
+  interpret.exec('a := 5.div(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2.5)
+})
+
+test('assignment func simple #20', () => {
+  interpret.exec('a := 2.lt(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #21', () => {
+  interpret.exec('a := 5.lt(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #22', () => {
+  interpret.exec('a := 2.gt(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #23', () => {
+  interpret.exec('a := 5.gt(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #24', () => {
+  interpret.exec('a := 5.ge(2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #25', () => {
+  interpret.exec('a := 5.ge(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #26', () => {
+  interpret.exec('a := 5.ge(4)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #27', () => {
+  interpret.exec('a := 4.le(4)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #28', () => {
+  interpret.exec('a := 4.le(3)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #29', () => {
+  interpret.exec('a := 4.le(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #30', () => {
+  interpret.exec('a := 4.eq(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #31', () => {
+  interpret.exec('a := 5.eq(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #32', () => {
+  interpret.exec('a := 5.eq(4)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #33', () => {
+  interpret.exec('a := 5.ne(4)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #34', () => {
+  interpret.exec('a := 4.ne(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #35', () => {
+  interpret.exec('a := 5.ne(5)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #36', () => {
+  interpret.exec('a := true.and(true)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #37', () => {
+  interpret.exec('a := true.and(false)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #38', () => {
+  interpret.exec('a := false.and(false)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #39', () => {
+  interpret.exec('a := false.or(false)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #40', () => {
+  interpret.exec('a := false.or(true)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #41', () => {
+  interpret.exec('a := false.xor(true)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #42', () => {
+  interpret.exec('a := false.xor(false)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #43', () => {
+  interpret.exec('a := false.nand(false)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #44', () => {
+  interpret.exec('a := false.nand(true)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func simple #45', () => {
+  interpret.exec('a := true.nand(true)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #46', () => {
+  interpret.exec('a := true.neg()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(false)
+})
+
+test('assignment func simple #47', () => {
+  interpret.exec('a := false.neg()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment func multiple params', () => {
+  interpret.exec('a := (123.plus((((10.plus(((50 + 5))))))) - 8) + 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(181)
 })

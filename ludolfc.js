@@ -6,6 +6,7 @@ const ERRORS = {
     UNEXPEXTED_KEYWORD: 'UNEXPEXTED_KEYWORD',
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
+    EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
 }
 
 const STATEMENTS = {
@@ -118,6 +119,37 @@ class Operator {
     }
 }
 
+class ValueObject {
+    constructor(value) {
+        this.value = value
+
+        if (typeof value === 'number') {
+            this.mult = x => value * x
+            this.div = x => value / x
+            this.mod = x => value % x
+            this.plus = x => value + x
+            this.minus = x => value - x
+            this.lt = x => value < x
+            this.le = x => value <= x
+            this.gt = x => value > x
+            this.ge = x => value >= x
+            this.eq = x => value === x
+            this.ne = x => value !== x
+        } else
+        if (typeof value === 'string') {
+            this.concat = x => value + x
+            this.length = () => value.length
+        } else
+        if (typeof value === 'boolean') {
+            this.and = x => value && x
+            this.or = x => value || x
+            this.xor = x => value ? !x : x
+            this.nand = x => !(value && x)
+            this.neg = () => !value
+        }
+    }
+}
+
 class Source {
     constructor(code) {
         this.code = code + '\n'
@@ -141,6 +173,10 @@ class Source {
 
     remaining(length = undefined) {
         return this.code.substring(this.pos, this.pos + length)
+    }
+
+    next(length = 1) {
+        return this.code.substring(Math.min(this.pos + 1, this.code.length - 1), Math.min(this.pos + 1 + length, this.code.length - 1))
     }
 
     finished() {
@@ -233,7 +269,11 @@ class LudolfC {
                     const value = this._execExpression(source)
                     const type = typeof value === 'number' ? VARIABLES.NUMBER
                                : typeof value === 'boolean' ? VARIABLES.BOOLEAN
-                               : VARIABLES.STRING
+                               : typeof value === 'string' ? VARIABLES.STRING
+                               : Array.isArray(value) ? VARIABLES.ARRAY
+                               : typeof value === 'function' ? VARIABLES.FUNCTION
+                               : typeof value === 'object' ? VARIABLES.OBJECT
+                               : 'UNKNOWN'
                     this.variables.set(token, new Variable(type, value))
                 }
 
@@ -288,7 +328,7 @@ class LudolfC {
                     if (members.length !== biops.length + 1) {
                         throw new LangError(ERRORS.UNEVEN_OPERATORS, source.row, source.col)
                     }
-                    return applyOperators(members, biops)
+                    return applyOperators(members, biops, uniops)
                 }
                 source.move()
                 continue
@@ -301,23 +341,46 @@ class LudolfC {
                 continue
             }
 
-            const next2 = source.remaining(2)
-            const next1 = source.remaining(1)
+            if ('.' === c && members.length && biops.length === members.length - 1) {
+                applyAttributeOp(source, members)
+                consumeSpaces(source)
+
+                // apply function call
+                if ('(' === source.currentChar()) {
+                    source.move()
+                    const params = this._readParams(source)  
+                    consumeSpaces(source)
+    
+                    if (')' === source.currentChar()) {
+                        if (typeof members[members.length - 1] !== 'function')
+                            throw new LangError(ERRORS.EXPEXTED_FUNCTION, source.row, source.col, members[members.length - 1])
+
+                        members[members.length - 1] = members[members.length - 1](...params)
+                        source.move()
+                    } else {
+                        throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
+                    }
+                }
+                continue
+            }
 
             if (biops.length === members.length) {
-                if (UNIOPERATORS.includes(next1)) {
-                    uniops.push(new Operator(next1))
+                if (UNIOPERATORS.includes(c)) {
+                    if (!uniops[members.length]) uniops[members.length] = []
+                    uniops[members.length].push(new Operator(c))    // index of the operator is the same as of the member to be applied to
                     source.move()
                     continue
                 }
-            } else {
+            } else
+            if (biops.length === members.length - 1) {
+                const next2 = source.remaining(2)
                 if (BIOPERATORS.includes(next2)) {
                     biops.push(new Operator(next2))
                     source.move(2)
                     continue
                 }
-                if (BIOPERATORS.includes(next1)) {
-                    biops.push(new Operator(next1))
+                if (BIOPERATORS.includes(c)) {
+                    biops.push(new Operator(c))
                     source.move()
                     continue
                 }
@@ -325,20 +388,24 @@ class LudolfC {
 
             let mexp = this._execMemberExpression(source)
 
-            if (uniops.length) {
-                mexp = uniops.reduceRight((a,c) => c.uni(a), mexp)
-                uniops.length = 0
-            }
-
             members.push(mexp)
         }
 
-        function applyOperators(members, ops) {
+        function applyAttributeOp(source, members) {
+            source.move()
+            const attrName = readIdentifier(source)
+            const idx = members.length - 1
+            members[idx] = (isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx])[attrName]
+        }
+
+        function applyOperators(members, biops, uniops) {
+            uniops.forEach((u,i) => members[i] = u.reduceRight((a,c) => c.uni(a), members[i]))
+
             let result = members[0]
             let opIndex
-            while ((opIndex = findNextOp(ops)) > -1) {
-                result = ops[opIndex].bi(members[opIndex], members[opIndex + 1])
-                ops = removeElementAt(ops, opIndex)
+            while ((opIndex = findNextOp(biops)) > -1) {
+                result = biops[opIndex].bi(members[opIndex], members[opIndex + 1])
+                biops = removeElementAt(biops, opIndex)
                 members = removeElementAt(members, opIndex)
                 members[opIndex] = result
             }
@@ -361,6 +428,18 @@ class LudolfC {
                 return arr.filter((v,i) => i !== index)
             }
         }
+
+        function readIdentifier(source) {
+            let token = ''
+            for (; !source.finished(); source.move()) {
+                const c = source.currentChar()
+                if (isSpace(c)) continue
+                if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token + c)) break                
+                token += c
+            }
+            if (token) return token
+            throw new LangError(ERRORS.EXPECTED_IDENTIFIER, source.row, source.col)
+        }
     }
 
     _execMemberExpression(source) {
@@ -371,23 +450,26 @@ class LudolfC {
 
             // token ends
             if (isExpressionSeparator(c)) {
+                if ('.' === c && /[0-9]/.test(source.next())) { // either the operator '.' or a float number
+                    token += c
+                    continue
+                }
+
                 if (KEYWORDS.TRUE.includes(token.toLowerCase())) {
-                    return true
-    
-                } else 
+                    return true    
+                }
                 if (KEYWORDS.FALSE.includes(token.toLowerCase())) {
-                    return false
-    
-                } else
+                    return false    
+                }
                 if (isNumeric(token)) {
                     return token.includes('.') ? parseFloat(token) : parseInt(token)
                 } 
-                else { // variable reference
-                    if (this.variables.has(token)) {
-                        return this.variables.get(token).value
-                    }
-                    throw new LangError(ERRORS.UNREFERENCED_VARIABLE, source.row, source.col, token)
+                // variable reference
+                if (this.variables.has(token)) {
+                    return this.variables.get(token).value
                 }
+                throw new LangError(ERRORS.UNREFERENCED_VARIABLE, source.row, source.col, token)
+                
             } else
             if (isStringStarting(c)) {
                 source.move()
@@ -409,6 +491,17 @@ class LudolfC {
                 token += c
             }
             throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
+        }
+    }
+    
+    _readParams(source) {
+        consumeSpaces(source)
+        if (')' === source.currentChar()) {
+            return []
+        } else {
+            // TODO multiple params
+            const p = this._execExpression(source, true)
+            return [p]
         }
     }
 
@@ -439,7 +532,7 @@ function isSpace(c) {
 }
 
 function isExpressionSeparator(c) {
-    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c 
+    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c || '[' === c || ']' === c || '.' === c
         || BIOPERATORS.some(op => op.startsWith(c)) || UNIOPERATORS.some(op => op.startsWith(c))
 }
 
@@ -453,6 +546,14 @@ function isStringStarting(c) {
 
 function isStringEnding(c, quoting) {
     return quoting === c || (c === '”' && quoting === '“')
+}
+
+function isPrimitive(value) {
+    return typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean'
+}
+
+function consumeSpaces(source) {
+    for (; !source.finished() && isSpace(source.currentChar()); source.move()) { }
 }
 
 module.exports = LudolfC

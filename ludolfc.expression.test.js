@@ -128,3 +128,19 @@ test('expression two vars #2', () => {
 test('expression two vars #3', () => {
   expect(interpret.exec('a := 123\n\nb:=1\n\nb+a')).toBe(124)
 })
+
+test('expression func call', () => {
+  expect(interpret.exec('1 - 123 . plus ( 10 ) . plus ( 55 ) . minus ( 88 ) . plus ( 123 . plus ( 10 ) . plus ( 55 ) . minus(88) ) + 2')).toBe(-197)
+})
+
+test('expression func call vars', () => {
+  expect(interpret.exec('_123:=123\n_10:=10\n1 - _123 . plus ( _10 ) . plus ( 55 ) . minus ( 88 ) . plus ( _123 . plus ( _10 ) . plus ( 55 ) . minus(88) ) + 2')).toBe(-197)
+})
+
+test('expression func call grouping', () => {
+  expect(interpret.exec('(123.plus((((10.plus(((50 + 5))))))) - 8) + 1 + 0.plus(1) + 1.plus(0)')).toBe(183)
+})
+
+test('expression func call grouping spaces', () => {
+  expect(interpret.exec('  ( 123 . plus ( ( ( ( 10 . plus ( (   (  50  +5 )  ) ) ) )   ) )  -   8   )+ 1+0. plus( 1  )+1   .plus (  0)')).toBe(183)
+})
