@@ -1476,3 +1476,23 @@ test('assignment error func multi params #5', () => {
 test('assignment error func multi params #6', () => {
   expect(() => interpret.exec('a := 1.sum((123, 2), 3)')).toThrow()
 })
+
+test('assignment error func not exists', () => {
+  expect(() => interpret.exec('a := 1.xxx()')).toThrow()
+})
+
+test('assignment error func not exists #2', () => {
+  expect(() => interpret.exec('a := 1.xxx(123)')).toThrow()
+})
+
+test('assignment error func not exists #3', () => {
+  expect(() => interpret.exec('a := 1.xxx(12,3)')).toThrow()
+})
+
+test('assignment error attribute not exists', () => {
+  expect(() => interpret.exec('a := 1.xxx')).toThrow()
+})
+
+test('assignment error attribute not exists #2', () => {
+  expect(() => interpret.exec('a := 1\nb := a.xxx')).toThrow()
+})

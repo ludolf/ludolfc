@@ -7,6 +7,7 @@ const ERRORS = {
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
     EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
+    ATTRIBUTE_NOT_EXISTS: 'ATTRIBUTE_NOT_EXISTS',
 }
 
 const STATEMENTS = {
@@ -320,11 +321,12 @@ class LudolfC {
                 throw new LangError(ERRORS.EXPEXTED_SYMBOL, source.row, source.col, expected)
             }
 
+            // end of the statement
             if (isStatementSeparator(c) || ')' === c || ',' === c) {
                 if (')' === c && (!inGrouping || !members.length)) {
                     throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 }
-                // evaluate the list of tokens
+                // evaluate the list of tokens and operators
                 if (members.length) {
                     if (members.length !== biops.length + 1) {
                         throw new LangError(ERRORS.UNEVEN_OPERATORS, source.row, source.col)
@@ -335,6 +337,7 @@ class LudolfC {
                 continue
             }
 
+            // grouping or a function call
             if ('(' === c) {
                 source.move()
                 if (rightOperatorExpected()) {    // a function call
@@ -357,21 +360,20 @@ class LudolfC {
                 continue
             }
 
+            // attribute access
             if ('.' === c && rightOperatorExpected()) {
                 source.move()
                 const attrName = this._readIdentifier(source)
                 const idx = members.length - 1
-                members[idx] = (isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx])[attrName]
-                
-                consumeSpaces(source)
-
-                // apply function call
-                if ('(' === source.currentChar()) {
-                    
+                const m = isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx]      
+                if (!m[attrName]) {
+                    throw new LangError(ERRORS.ATTRIBUTE_NOT_EXISTS, source.row, source.col, attrName)
                 }
+                members[idx] = m[attrName] 
                 continue
             }
 
+            // operators
             if (leftOperatorExpected()) {
                 if (UNIOPERATORS.includes(c)) {
                     if (!uniops[members.length]) uniops[members.length] = []
@@ -379,8 +381,7 @@ class LudolfC {
                     source.move()
                     continue
                 }
-            } else
-            if (rightOperatorExpected()) {
+            } else if (rightOperatorExpected()) {
                 const next2 = source.remaining(2)
                 if (BIOPERATORS.includes(next2)) {
                     biops.push(new Operator(next2))
@@ -511,18 +512,6 @@ class LudolfC {
         }
         if (token) return token
         throw new LangError(ERRORS.EXPECTED_IDENTIFIER, source.row, source.col)
-    }
-
-    _execCondition(source) {
-        
-    }
-
-    _execLoop(source) {
-
-    }
-
-    _execCall(source) {
-
     }
 }
 
