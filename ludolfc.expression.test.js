@@ -152,3 +152,15 @@ test('expression func call double params', () => {
 test('expression func call double params spaces', () => {
   expect(interpret.exec('    1 .   sum  (  2  .  minus ( 1   )   ,( 3  .plus ( 1)  )).minus   (1)+1').value).toBe(6)
 })
+
+test('expression array one dimension', () => {
+  expect(interpret.exec('[1,2]').value[1].value).toBe(2)
+})
+
+test('expression array one dimension #2', () => {
+  expect(interpret.exec('[1, 2 \n ]').value[1].value).toBe(2)
+})
+
+test('expression array one dimension #3', () => {
+  expect(interpret.exec(' x:=1  \n[  \n (0.plus(1) + 1), \n3.minus(x) +12,   10 + x.plus(x +x) \n ]   ').value[2].value).toBe(13)
+})

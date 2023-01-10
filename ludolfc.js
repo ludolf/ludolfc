@@ -109,6 +109,7 @@ class LangArray extends LangValueObject {
         super(value, TYPES.ARRAY)
 
         this.concat = new LangFunction(x => new LangArray(this.value.concat(x.value)))
+        this.length = new LangFunction(() => new LangNumber(this.value.length))
     }
     element(...index) {
         return index.reduce((a,c) => a[c], this.value)
@@ -239,6 +240,9 @@ class LudolfC {
         let inAssignment = false
         let inObject = false
 
+        let openArrays = 0  // [
+        let openObjects = 0 // {
+
         for (; !source.finished(); source.move()) {
             const c = source.currentChar()
             
@@ -251,6 +255,11 @@ class LudolfC {
                     cc = source.currentChar()
                 } while (!source.finished() && !isStringEnding(cc, c))
             }
+
+            if ('[' === c) openArrays++
+            if (']' === c) openArrays--
+            if ('{' === c) openObjects++
+            if ('}' === c) openObjects--
             
             // ignore spaces
             if (!expecting && isSpace(c)) continue
@@ -265,7 +274,7 @@ class LudolfC {
             }
 
             // end of the statement
-            if (isStatementSeparator(c)) {
+            if (isStatementSeparator(c) && !openArrays && !openObjects) {
                 source.move()
                 break
             }
@@ -288,7 +297,8 @@ class LudolfC {
                     if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token)) 
                         throw new LangError(ERRORS.INVALID_IDENTIFIER, source.row, source.col, token)
                     
-                    this.variables.set(token, this._execExpression(source))
+                    const value = this._execExpression(source)
+                    this.variables.set(token, value)
                 }
 
                 inAssignment = false
@@ -309,7 +319,7 @@ class LudolfC {
         }
     }
 
-    _execExpression(source, inGrouping = false) {
+    _execExpression(source, inGrouping = null) {
         const members = []
         const uniops = []
         const biops = []
@@ -334,8 +344,8 @@ class LudolfC {
             }
 
             // end of the statement
-            if (isStatementSeparator(c) || ')' === c || ',' === c) {
-                if (')' === c && (!inGrouping || !members.length)) {
+            if (isStatementSeparator(c) || ')' === c || ']' === c || ',' === c) {
+                if ((')' === c || ']' === c) && ((!inGrouping && inGrouping !== c) || !members.length)) {
                     throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 }
                 // evaluate the list of tokens and operators
@@ -353,7 +363,7 @@ class LudolfC {
             if ('(' === c) {
                 source.move()
                 if (rightOperatorExpected()) {    // a function call
-                    const params = this._readParams(source)  
+                    const params = this._readList(source, ')')
                     consumeSpaces(source)
     
                     if (')' === source.currentChar()) {
@@ -385,6 +395,25 @@ class LudolfC {
                 continue
             }
 
+            // arrays
+            if ('[' === c) {
+                source.move()
+                if (rightOperatorExpected()) { // array access
+                    // TODO
+                } else {    // array definition
+                    const elements = this._readList(source, ']')
+                    consumeSpaces(source)
+    
+                    if (']' === source.currentChar()) {
+                        members.push(new LangArray(elements))
+                        source.move()
+                    } else {
+                        throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                    }
+                }
+                continue
+            }
+
             // operators
             if (leftOperatorExpected()) {
                 if (UNIOPERATORS.includes(c)) {
@@ -407,7 +436,8 @@ class LudolfC {
                 }
             }
 
-            members.push(this._execMemberExpression(source))
+            const value = this._execMemberExpression(source)
+            members.push(value)
         }
 
         function leftOperatorExpected() {
@@ -484,14 +514,16 @@ class LudolfC {
         }
     }
     
-    _readParams(source) {
+    _readList(source, groupingCloseChar) {
         consumeSpaces(source)
-        if (')' === source.currentChar()) {
+        if (groupingCloseChar === source.currentChar()) {
             return []
         } else {    // multiple params
             const params = []
             do {
-                params.push(this._execExpression(source, true))
+                const value = this._execExpression(source, groupingCloseChar)
+                params.push(value)
+
                 consumeSpaces(source)
 
             } while(',' === source.currentChar())
@@ -558,7 +590,7 @@ function isStringEnding(c, quoting) {
 }
 
 function consumeSpaces(source) {
-    for (; !source.finished() && isSpace(source.currentChar()); source.move()) { }
+    while (!source.finished() && /\s/.test(source.currentChar())) source.move()
 }
 
 function removeElementAt(arr, index) {
