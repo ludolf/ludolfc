@@ -1,3 +1,11 @@
+const KEYWORDS = {
+    TRUE: ['true', 'pravda', 'wahr'],
+    FALSE: ['false', 'nepravda', 'unwahr'],
+    IF: ['if', 'pokud', 'falls'],
+    ELSE: ['else', 'jinak', 'sonst'],
+    WHILE: ['while', 'dokud', 'soweit'],
+}
+
 const ERRORS = {
     UNEXPECTED_END: 'UNEXPECTED_END',
     UNEXPEXTED_SYMBOL: 'UNEXPEXTED_SYMBOL',
@@ -10,28 +18,13 @@ const ERRORS = {
     ATTRIBUTE_NOT_EXISTS: 'ATTRIBUTE_NOT_EXISTS',
 }
 
-const STATEMENTS = {
-    ASSIGNMENT: 'ASSIGNMENT',
-    CONDITION: 'CONDITION',
-    LOOP: 'LOOP',
-    EXPRESSION: 'EXPRESSION',
-}
-
-const VARIABLES = {
+const TYPES = {
     NUMBER: 'NUMBER',
     BOOLEAN: 'BOOLEAN',
     STRING: 'STRING',
     ARRAY: 'ARRAY',
     OBJECT: 'OBJECT',
     FUNCTION: 'FUNCTION',
-}
-
-const KEYWORDS = {
-    TRUE: ['true', 'pravda', 'wahr'],
-    FALSE: ['false', 'nepravda', 'unwahr'],
-    IF: ['if', 'pokud', 'falls'],
-    ELSE: ['else', 'jinak', 'sonst'],
-    WHILE: ['while', 'dokud', 'soweit'],
 }
 
 const UNIOPERATORS = ['!', '-']
@@ -50,16 +43,84 @@ class LangError extends Error {
     }
 }
 
-class Statement {
-    constructor(type) {
+class LangObject {
+    constructor(value, type = TYPES.OBJECT) {
+        this.value = value
         this.type = type
+    }
+    attribute(name) {
+        return this[name] ? this[name] : this.value[name]
+    }
+    hasAttribute(name) {
+        return this[name] || this.value[name]
     }
 }
 
-class Variable {
-    constructor(type, value) {
-        this.type = type
-        this.value = value
+class LangValueObject extends LangObject {
+    constructor(value, type) {
+        super(value, type)
+
+        this.eq = new LangFunction(x => new LangBoolean(this.value === x.value))
+        this.ne = new LangFunction(x => new LangBoolean(this.value !== x.value))
+    }
+}
+
+class LangNumber extends LangValueObject {
+    constructor(value) {
+        super(value, TYPES.NUMBER)
+        
+        this.mult = new LangFunction(x => new LangNumber(this.value * x.value))
+        this.div = new LangFunction(x => new LangNumber(this.value / x.value))
+        this.mod = new LangFunction(x => new LangNumber(this.value % x.value))
+        this.plus = new LangFunction(x => new LangNumber(this.value + x.value))
+        this.minus = new LangFunction(x => new LangNumber(this.value - x.value))
+        this.lt = new LangFunction(x => new LangBoolean(this.value < x.value))
+        this.le = new LangFunction(x => new LangBoolean(this.value <= x.value))
+        this.gt = new LangFunction(x => new LangBoolean(this.value > x.value))
+        this.ge = new LangFunction(x => new LangBoolean(this.value >= x.value))
+        this.neg = new LangFunction(() => new LangNumber(-this.value))
+        this.sum = new LangFunction((...x) => new LangNumber(x.reduce((a,c) => a + c.value, this.value)))
+    }
+}
+
+class LangString extends LangValueObject {
+    constructor(value) {
+        super(value, TYPES.STRING)
+
+        this.concat = new LangFunction(x => new LangString(this.value + x.value))
+        this.length = new LangFunction(() => new LangNumber(this.value.length))
+    }
+}
+
+class LangBoolean extends LangValueObject {
+    constructor(value) {
+        super(value, TYPES.BOOLEAN)
+
+        this.and = new LangFunction(x => new LangBoolean(this.value && x.value))
+        this.or = new LangFunction(x => new LangBoolean(this.value || x.value))
+        this.xor = new LangFunction(x => new LangBoolean(this.value ? !x.value : x.value))
+        this.nand = new LangFunction(x => new LangBoolean(!(this.value && x.value)))
+        this.neg = new LangFunction(() => new LangBoolean(!this.value))
+    }
+}
+
+class LangArray extends LangValueObject {
+    constructor(value) {
+        super(value, TYPES.ARRAY)
+
+        this.concat = new LangFunction(x => new LangArray(this.value.concat(x.value)))
+    }
+    element(...index) {
+        return index.reduce((a,c) => a[c], this.value)
+    }
+}
+
+class LangFunction extends LangObject {
+    constructor(fn) {
+        super(fn, TYPES.FUNCTION)
+    }
+    call(...params) {
+        return this.value(...params)
     }
 }
 
@@ -71,27 +132,27 @@ class Operator {
 
     uni(a) {
         switch (this.op) {
-            case '!': return !a
-            case '-': return -a
+            case '!': 
+            case '-': return a.neg.call()
             default: throw new Error('Invalid uni operator ' + this.op)
         }
     }
 
     bi(a, b) {
         switch (this.op) {
-            case '*': return a * b
-            case '/': return a / b
-            case '%': return a % b
-            case '+': return a + b
-            case '-': return a - b
-            case '<': return a < b
-            case '<=': return a <= b
-            case '>': return a > b
-            case '>=': return a >= b
-            case '=': return a === b // a == b
-            case '!=': return a !== b // a != b
-            case '&': return a && b
-            case '|': return a || b
+            case '*': return a.mult.call(b)
+            case '/': return a.div.call(b)
+            case '%': return a.mod.call(b)
+            case '+': return a.plus.call(b)
+            case '-': return a.minus.call(b)
+            case '<': return a.lt.call(b)
+            case '<=': return a.le.call(b)
+            case '>': return a.gt.call(b)
+            case '>=': return a.ge.call(b)
+            case '=': return a.eq.call(b)
+            case '!=': return a.ne.call(b)
+            case '&': return a.and.call(b)
+            case '|': return a.or.call(b)
             default: throw new Error('Invalid bi operator ' + this.op)
         }
     }
@@ -112,42 +173,6 @@ class Operator {
             case '&': return 4
             case '|': return 3
             default: -1
-        }
-    }
-
-    toString() {
-        return this.op
-    }
-}
-
-class ValueObject {
-    constructor(value) {
-        this.value = value
-
-        if (typeof value === 'number') {
-            this.mult = x => value * x
-            this.div = x => value / x
-            this.mod = x => value % x
-            this.plus = x => value + x
-            this.minus = x => value - x
-            this.lt = x => value < x
-            this.le = x => value <= x
-            this.gt = x => value > x
-            this.ge = x => value >= x
-            this.eq = x => value === x
-            this.ne = x => value !== x
-            this.sum = (...x) => x.reduce((a,c) => a + c, value)
-        } else
-        if (typeof value === 'string') {
-            this.concat = x => value + x
-            this.length = () => value.length
-        } else
-        if (typeof value === 'boolean') {
-            this.and = x => value && x
-            this.or = x => value || x
-            this.xor = x => value ? !x : x
-            this.nand = x => !(value && x)
-            this.neg = () => !value
         }
     }
 }
@@ -212,14 +237,13 @@ class LudolfC {
         
         let expecting = null
         let inAssignment = false
-        let inArray = false
         let inObject = false
 
         for (; !source.finished(); source.move()) {
             const c = source.currentChar()
             
             // consume the whole string to prevent space-ignoring
-            if (!inAssignment && !inArray && !inObject && isStringStarting(c)) {
+            if (!inAssignment && !inObject && isStringStarting(c)) {
                 let cc = c
                 do {
                     token += cc
@@ -256,10 +280,6 @@ class LudolfC {
                     this.variables.set(token, 
                         new Variable(VARIABLES.FUNCTION, this._parseFunction(source)))
                 } else
-                if ('[' === c) {
-                    // TODO parse array
-                    inArray = true
-                } else 
                 if ('{' === c) {
                     // TODO parse object
                     inObject = true
@@ -268,15 +288,7 @@ class LudolfC {
                     if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token)) 
                         throw new LangError(ERRORS.INVALID_IDENTIFIER, source.row, source.col, token)
                     
-                    const value = this._execExpression(source)
-                    const type = typeof value === 'number' ? VARIABLES.NUMBER
-                               : typeof value === 'boolean' ? VARIABLES.BOOLEAN
-                               : typeof value === 'string' ? VARIABLES.STRING
-                               : Array.isArray(value) ? VARIABLES.ARRAY
-                               : typeof value === 'function' ? VARIABLES.FUNCTION
-                               : typeof value === 'object' ? VARIABLES.OBJECT
-                               : 'UNKNOWN'
-                    this.variables.set(token, new Variable(type, value))
+                    this.variables.set(token, this._execExpression(source))
                 }
 
                 inAssignment = false
@@ -287,7 +299,7 @@ class LudolfC {
             }
         }
 
-        if (inAssignment || inArray || inObject) {
+        if (inAssignment || inObject) {
             throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
         }
 
@@ -345,10 +357,11 @@ class LudolfC {
                     consumeSpaces(source)
     
                     if (')' === source.currentChar()) {
-                        if (typeof members[members.length - 1] !== 'function')
+                        const idx = members.length - 1
+                        if (members[idx].type !== TYPES.FUNCTION)
                             throw new LangError(ERRORS.EXPEXTED_FUNCTION, source.row, source.col, members[members.length - 1])
 
-                        members[members.length - 1] = members[members.length - 1](...params)
+                        members[idx] = members[idx].call(...params)
                         source.move()
                     } else {
                         throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
@@ -365,11 +378,10 @@ class LudolfC {
                 source.move()
                 const attrName = this._readIdentifier(source)
                 const idx = members.length - 1
-                const m = isPrimitive(members[idx]) ? new ValueObject(members[idx]) : members[idx]      
-                if (!m[attrName]) {
+                if (!members[idx].hasAttribute(attrName)) {
                     throw new LangError(ERRORS.ATTRIBUTE_NOT_EXISTS, source.row, source.col, attrName)
                 }
-                members[idx] = m[attrName] 
+                members[idx] = members[idx].attribute(attrName)
                 continue
             }
 
@@ -448,24 +460,24 @@ class LudolfC {
                 }
 
                 if (KEYWORDS.TRUE.includes(token.toLowerCase())) {
-                    return true    
+                    return new LangBoolean(true)
                 }
                 if (KEYWORDS.FALSE.includes(token.toLowerCase())) {
-                    return false    
+                    return new LangBoolean(false)
                 }
                 if (isNumeric(token)) {
-                    return token.includes('.') ? parseFloat(token) : parseInt(token)
+                    return new LangNumber(token.includes('.') ? parseFloat(token) : parseInt(token))
                 } 
                 // variable reference
                 if (this.variables.has(token)) {
-                    return this.variables.get(token).value
+                    return this.variables.get(token)
                 }
                 throw new LangError(ERRORS.UNREFERENCED_VARIABLE, source.row, source.col, token)
                 
             } else
             if (isStringStarting(c)) {
                 source.move()
-                return this._readString(source, c)
+                return new LangString(this._readString(source, c))
             }
 
             token += c
@@ -543,10 +555,6 @@ function isStringStarting(c) {
 
 function isStringEnding(c, quoting) {
     return quoting === c || (c === '”' && quoting === '“')
-}
-
-function isPrimitive(value) {
-    return typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean'
 }
 
 function consumeSpaces(source) {
