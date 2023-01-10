@@ -16,6 +16,9 @@ const ERRORS = {
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
     EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
     ATTRIBUTE_NOT_EXISTS: 'ATTRIBUTE_NOT_EXISTS',
+    ARRAY_INDEX_NOT_NUMBER: 'ARRAY_INDEX_NOT_NUMBER',
+    ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
+    ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
 }
 
 const TYPES = {
@@ -112,7 +115,7 @@ class LangArray extends LangValueObject {
         this.length = new LangFunction(() => new LangNumber(this.value.length))
     }
     element(...index) {
-        return index.reduce((a,c) => a[c], this.value)
+        return index.reduce((a,c) => a.value[Math.ceil(c.value)], this)
     }
 }
 
@@ -399,7 +402,21 @@ class LudolfC {
             if ('[' === c) {
                 source.move()
                 if (rightOperatorExpected()) { // array access
-                    // TODO
+                    const indexes = this._readList(source, ']')
+                    consumeSpaces(source)
+
+                    if (!indexes.length) throw new LangError(ERRORS.ARRAY_INDEX_MISSING, source.row, source.col)
+
+                    if (']' === source.currentChar()) {
+                        if (indexes.some(x => TYPES.NUMBER !== x.type)) throw new LangError(ERRORS.ARRAY_INDEX_NOT_NUMBER, source.row, source.col)
+                        const idx = members.length - 1
+                        const value = members[idx].element(...indexes)
+                        if (!value) throw new LangError(ERRORS.ARRAY_INDEX_OUT_BOUNDS, source.row, source.col)
+                        members[idx] = value
+                        source.move()
+                    } else {
+                        throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                    }
                 } else {    // array definition
                     const elements = this._readList(source, ']')
                     consumeSpaces(source)

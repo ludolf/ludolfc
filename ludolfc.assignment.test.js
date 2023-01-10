@@ -1497,14 +1497,14 @@ test('assignment error attribute not exists #2', () => {
   expect(() => interpret.exec('a := 1\nb := a.xxx')).toThrow()
 })
 
-test('assignment array empty', () => {
+test('assignment array definition empty', () => {
   interpret.exec('a := []')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
   expect(interpret.variables.get('a').value).toEqual(expect.arrayContaining([]))
 })
 
-test('assignment array one dimension', () => {
+test('assignment array definition one dimension', () => {
   interpret.exec('a := [1]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1513,7 +1513,7 @@ test('assignment array one dimension', () => {
   expect(interpret.variables.get('a').value[0].value).toBe(1)
 })
 
-test('assignment array one dimension #2', () => {
+test('assignment array definition one dimension #2', () => {
   interpret.exec('a := [1,2,3]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1526,7 +1526,7 @@ test('assignment array one dimension #2', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(3)
 })
 
-test('assignment array one dimension #2 spaces', () => {
+test('assignment array definition one dimension #2 spaces', () => {
   interpret.exec('a := [  1 ,2  ,   3   ]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1539,7 +1539,7 @@ test('assignment array one dimension #2 spaces', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(3)
 })
 
-test('assignment array one dimension #2 newlines', () => {
+test('assignment array definition one dimension #2 newlines', () => {
   interpret.exec('a := [\n1\n,\n2]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1550,7 +1550,7 @@ test('assignment array one dimension #2 newlines', () => {
   expect(interpret.variables.get('a').value[1].value).toBe(2)
 })
 
-test('assignment array one dimension #2 newlines #2', () => {
+test('assignment array definition one dimension #2 newlines #2', () => {
   interpret.exec('a := [\n1\n,\n2\n,\n3\n]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1563,7 +1563,7 @@ test('assignment array one dimension #2 newlines #2', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(3)
 })
 
-test('assignment array one dimension #2 newlines and space', () => {
+test('assignment array definition one dimension #2 newlines and space', () => {
   interpret.exec('a := [ \n  1\n ,\n2  \n,\n   3   \n ]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1576,7 +1576,7 @@ test('assignment array one dimension #2 newlines and space', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(3)
 })
 
-test('assignment array one dimension #3', () => {
+test('assignment array definition one dimension #3', () => {
   interpret.exec('a := [0.plus(1) + 1, 3.minus(1) +12, 10 + 2.plus(1)]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1589,7 +1589,7 @@ test('assignment array one dimension #3', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(13)
 })
 
-test('assignment array one dimension #4', () => {
+test('assignment array definition one dimension #4', () => {
   interpret.exec('x := 1\na := [(0.plus(1) + 1), 3.minus(x) +12, 10 + x.plus(x +x)]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1602,7 +1602,7 @@ test('assignment array one dimension #4', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(13)
 })
 
-test('assignment array one dimension #5', () => {
+test('assignment array definition one dimension #5', () => {
   interpret.exec('x := 1\na := ([(0.plus(1) + 1), 3.minus(x) +12, 10 + x.plus(x +x)])')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1615,7 +1615,7 @@ test('assignment array one dimension #5', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(13)
 })
 
-test('assignment array one dimension heterogen', () => {
+test('assignment array definition one dimension heterogen', () => {
   interpret.exec('a := [123, "123", 123 > 100]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1628,7 +1628,7 @@ test('assignment array one dimension heterogen', () => {
   expect(interpret.variables.get('a').value[2].value).toBe(true)
 })
 
-test('assignment array one dimension concat', () => {
+test('assignment array definition one dimension concat', () => {
   interpret.exec('a := [1,2].concat([3,4])')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1643,7 +1643,7 @@ test('assignment array one dimension concat', () => {
   expect(interpret.variables.get('a').value[3].value).toBe(4)
 })
 
-test('assignment array two dimensions', () => {
+test('assignment array definition two dimensions', () => {
   interpret.exec('a := [[1,2],[3]]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1661,7 +1661,7 @@ test('assignment array two dimensions', () => {
   expect(interpret.variables.get('a').value[1].value[0].value).toBe(3)
 })
 
-test('assignment array two dimensions spaces', () => {
+test('assignment array definition two dimensions spaces', () => {
   interpret.exec('  a := [  [  1  ,  2    ]   ,  [    3   ]   ]   ')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1679,7 +1679,7 @@ test('assignment array two dimensions spaces', () => {
   expect(interpret.variables.get('a').value[1].value[0].value).toBe(3)
 })
 
-test('assignment array two dimensions newlines', () => {
+test('assignment array definition two dimensions newlines', () => {
   interpret.exec('a := [\n[\n1\n]\n]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1691,7 +1691,7 @@ test('assignment array two dimensions newlines', () => {
   expect(interpret.variables.get('a').value[0].value[0].value).toBe(1)
 })
 
-test('assignment array two dimensions spaces and newlines', () => {
+test('assignment array definition two dimensions spaces and newlines', () => {
   interpret.exec('a := [ \n [ \n 1 \n ] \n ] ')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1703,7 +1703,7 @@ test('assignment array two dimensions spaces and newlines', () => {
   expect(interpret.variables.get('a').value[0].value[0].value).toBe(1)
 })
 
-test('assignment array two dimensions spaces and newlines #2', () => {
+test('assignment array definition two dimensions spaces and newlines #2', () => {
   interpret.exec('a := [\n[\n1\n,\n2\n\n]\n]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1717,7 +1717,7 @@ test('assignment array two dimensions spaces and newlines #2', () => {
   expect(interpret.variables.get('a').value[0].value[1].value).toBe(2)
 })
 
-test('assignment array two dimensions spaces and newlines #3', () => {
+test('assignment array definition two dimensions spaces and newlines #3', () => {
   interpret.exec('  a := [\n  [\n  1  \n, \n 2 \n  \n ] \n  ,\n\n  [\n\n    3\n  \n ] \n\n \n ] \n  ')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1735,7 +1735,7 @@ test('assignment array two dimensions spaces and newlines #3', () => {
   expect(interpret.variables.get('a').value[1].value[0].value).toBe(3)
 })
 
-test('assignment array two empty dimensions', () => {
+test('assignment array definition two empty dimensions', () => {
   interpret.exec('a := [[]]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1745,7 +1745,7 @@ test('assignment array two empty dimensions', () => {
   expect(interpret.variables.get('a').value[0].value).toHaveLength(0)
 })
 
-test('assignment array two empty dimensions #2', () => {
+test('assignment array definition two empty dimensions #2', () => {
   interpret.exec('a := [[],[]]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1758,7 +1758,7 @@ test('assignment array two empty dimensions #2', () => {
   expect(interpret.variables.get('a').value[1].value).toHaveLength(0)
 })
 
-test('assignment array three empty dimensions', () => {
+test('assignment array definition three empty dimensions', () => {
   interpret.exec('a := [[[]],[]]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1774,7 +1774,7 @@ test('assignment array three empty dimensions', () => {
   expect(interpret.variables.get('a').value[1].value).toHaveLength(0)
 })
 
-test('assignment array three empty dimensions spaces and newlines', () => {
+test('assignment array definition three empty dimensions spaces and newlines', () => {
   interpret.exec('a := [ \n \n [  \n\n [ \n \n ] \n \n ] \n \n , \n \n [ \n \n ] \n \n ] \n \n ')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1790,7 +1790,7 @@ test('assignment array three empty dimensions spaces and newlines', () => {
   expect(interpret.variables.get('a').value[1].value).toHaveLength(0)
 })
 
-test('assignment error array', () => {
+test('assignment error array definition', () => {
   expect(() => interpret.exec('a := [')).toThrow()
   expect(() => interpret.exec('a := ]')).toThrow()
   expect(() => interpret.exec('a := []]')).toThrow()
@@ -1805,4 +1805,139 @@ test('assignment error array', () => {
   expect(() => interpret.exec('a := [[,]')).toThrow()
   expect(() => interpret.exec('a := [1,]')).toThrow()
   expect(() => interpret.exec('a := [1,2,]')).toThrow()  
+})
+
+test('assignment array access one dimension', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[0]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment array access one dimension #2', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[2]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access one dimension #3', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[1 + 1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access one dimension #4', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[(123.minus(100) - 22)]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access one dimension #4', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[(((123.minus(100) - 23)) + (1))]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access one dimension #5', () => {
+  interpret.exec('arr := [1,2,3]\na := arr[1 + 1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access one dimension #6', () => {
+  interpret.exec('x:=2\ny:=33\narr := [1,x,y]\na := arr[1 + 1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(33)
+})
+
+test('assignment error array access', () => {
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[]')).toThrow()
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[,]')).toThrow()
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[1,]')).toThrow()
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[1,2]')).toThrow()
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[[1]]')).toThrow()
+  expect(() => interpret.exec('arr := [1,2,3]\na := arr[3]')).toThrow()
+})
+
+test('assignment array access two dimensions', () => {
+  interpret.exec('arr := [[1,2],[3]]\na := arr[0,1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access two dimensions #2', () => {
+  interpret.exec('arr := [[1,2],[3]]\na := arr[1,0]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access two dimensions #3', () => {
+  interpret.exec('arr := [[1,2],[3]]\na := arr[1, (0.plus(1) - 1)]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access two dimensions #4', () => {
+  interpret.exec('arr := [[1,2],[3,4,5]]\na := arr[1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value).toHaveLength(3)
+})
+
+test('assignment array access direct', () => {
+  interpret.exec('a := [[1,2],[3]] [0,1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access direct #2', () => {
+  interpret.exec('a := [[1,2],[3]] [1, (0.plus(1) - 1)]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access direct #3', () => {
+  interpret.exec('a := [[1,2],[3]][1, (0.plus(1) - 1)]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment array access direct #4', () => {
+  interpret.exec('a := [[1,2],[3,4,5]] [1]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value).toHaveLength(3)
+})
+
+test('assignment array access direct #5', () => {
+  interpret.exec('x:=0\ny:=1\na := [[1,2],[3,4,5]][x,y]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access direct #6', () => {
+  interpret.exec('x:=0\ny:=1\na := [[y,y+1],[y+1+1,y+1+1+1,y+4+x]][x,y]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment array access direct #7', () => {
+  interpret.exec('x:=0\ny:=1\na := [ \n  \n [\n 1 \n , \n 2 \n ] \n , \n [ \n 3 \n , \n 4 \n , \n 5 \n ] \n ]     [ \n x \n , \n y \n ] \n ')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
 })
