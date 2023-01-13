@@ -203,7 +203,7 @@ class Source {
     }
 
     remaining(length = undefined) {
-        return this.code.substring(this.pos, this.pos + length)
+        return this.code.substring(this.pos, Math.min(this.pos + length, this.code.length - 1))
     }
 
     next(length = 1) {
@@ -241,7 +241,6 @@ class LudolfC {
         
         let expecting = null
         let inAssignment = false
-        let inObject = false
 
         let openArrays = 0  // [
         let openObjects = 0 // {
@@ -250,7 +249,7 @@ class LudolfC {
             const c = source.currentChar()
             
             // consume the whole string to prevent space-ignoring
-            if (!inAssignment && !inObject && isStringStarting(c)) {
+            if (!inAssignment && isStringStarting(c)) {
                 let cc = c
                 do {
                     token += cc
@@ -282,21 +281,17 @@ class LudolfC {
                 break
             }
 
-            if (':' === c) {
+            if (':' === c && !openObjects) {    // assignment starting
                 if (!(token.length)) throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 if (isKeyword(token)) throw new LangError(ERRORS.UNEXPEXTED_KEYWORD, source.row, source.col, c)
                 expecting = '='
             } else
             if (inAssignment) {
+                // function defition TODO
                 if (new RegExp(`^${RE_FUNCTION}`).test(source.remaining())) {
-                    this.variables.set(token, 
-                        new Variable(VARIABLES.FUNCTION, this._parseFunction(source)))
-                } else
-                if ('{' === c) {
-                    // TODO parse object
-                    inObject = true
-                }
-                else {
+                    this.variables.set(token, new Variable(VARIABLES.FUNCTION, this._parseFunction(source)))
+                } else { 
+                    // variable assignment
                     if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token)) 
                         throw new LangError(ERRORS.INVALID_IDENTIFIER, source.row, source.col, token)
                     
@@ -312,7 +307,7 @@ class LudolfC {
             }
         }
 
-        if (inAssignment || inObject) {
+        if (inAssignment) {
             throw new LangError(ERRORS.UNEXPECTED_END, source.row, source.col)
         }
 
@@ -347,8 +342,8 @@ class LudolfC {
             }
 
             // end of the statement
-            if (isStatementSeparator(c) || ')' === c || ']' === c || ',' === c) {
-                if ((')' === c || ']' === c) && ((!inGrouping && inGrouping !== c) || !members.length)) {
+            if (isStatementSeparator(c) || ')' === c || ']' === c || '}' === c || ',' === c) {
+                if ((')' === c || ']' === c || '}' === c) && ((!inGrouping && inGrouping !== c) || !members.length)) {
                     throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 }
                 // evaluate the list of tokens and operators
@@ -360,6 +355,23 @@ class LudolfC {
                 }
                 source.move()
                 continue
+            }
+
+            // object definition
+            if ('{' === c) {
+                if (!leftOperatorExpected()) {
+                    throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                }
+                source.move()
+                const attributes = this._readAttributes(source, ')')
+
+                consumeSpaces(source)
+                if ('}' === source.currentChar()) {
+                    members.push(new LangObject(attributes))
+                    source.move()
+                    continue
+                }
+                throw new LangError(ERRORS.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), '}')
             }
 
             // grouping or a function call
@@ -548,6 +560,38 @@ class LudolfC {
             return params
         }
     }
+    
+    _readAttributes(source) {
+        consumeSpaces(source)
+        if ('}' === source.currentChar()) {
+            return {}
+        } else {    // multiple attributes
+            const attributes = {}
+            let first = true
+            do {
+                if (!first) {
+                    source.move()
+                }
+                first = false
+
+                const name = this._readIdentifier(source)
+                consumeSpaces(source)
+
+                if (':' !== source.currentChar()) {
+                    throw new LangError(ERRORS.EXPEXTED_SYMBOL, source.row, source.col, ':', source.currentChar())
+                }
+                source.move()
+
+                const value = this._execExpression(source, '}')
+                attributes[name] = value
+
+                consumeSpaces(source)
+
+            } while(',' === source.currentChar())
+
+            return attributes
+        }
+    }
 
     _readString(source, quoting) {
         let token = ''
@@ -590,7 +634,9 @@ function isSpace(c) {
 }
 
 function isExpressionSeparator(c) {
-    return isSpace(c) || isStatementSeparator(c) || '(' === c || ')' === c || '[' === c || ']' === c || '.' === c || ',' === c
+    return isSpace(c) || isStatementSeparator(c) 
+        || '(' === c || ')' === c || '[' === c || ']' === c || '{' === c || '}' === c 
+        || '.' === c || ',' === c
         || BIOPERATORS.some(op => op.startsWith(c)) || UNIOPERATORS.some(op => op.startsWith(c))
 }
 

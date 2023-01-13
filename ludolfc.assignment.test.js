@@ -1746,6 +1746,16 @@ test('assignment array definition two empty dimensions', () => {
 })
 
 test('assignment array definition two empty dimensions #2', () => {
+  interpret.exec('a := [\n[]]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value).toHaveLength(1)
+
+  expect(interpret.variables.get('a').value[0].type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value[0].value).toHaveLength(0)
+})
+
+test('assignment array definition two empty dimensions #3', () => {
   interpret.exec('a := [[],[]]')
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('ARRAY')
@@ -1804,7 +1814,8 @@ test('assignment error array definition', () => {
   expect(() => interpret.exec('a := [[,]]')).toThrow()
   expect(() => interpret.exec('a := [[,]')).toThrow()
   expect(() => interpret.exec('a := [1,]')).toThrow()
-  expect(() => interpret.exec('a := [1,2,]')).toThrow()  
+  expect(() => interpret.exec('a := [1,2,]')).toThrow()
+  expect(() => interpret.exec('a := \n[]')).toThrow() // definition must start on the same line
 })
 
 test('assignment array access one dimension', () => {
@@ -1940,4 +1951,444 @@ test('assignment array access direct #7', () => {
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment object definition empty', () => {
+  interpret.exec('a := {}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value)).toHaveLength(0)
+})
+test('assignment object definition empty quoting', () => {
+  interpret.exec('a := ({})')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value)).toHaveLength(0)
+})
+
+test('assignment object definition empty spaces', () => {
+  interpret.exec('a := {   }')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value)).toHaveLength(0)
+})
+
+test('assignment object definition empty spaces and whitelines', () => {
+  interpret.exec('a := { \n\n   }')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value)).toHaveLength(0)
+})
+
+test('assignment object definition one simple attribute', () => {
+  interpret.exec('a := {x:1}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x.value).toBe(1)
+})
+
+test('assignment object definition one simple attribute quoting', () => {
+  interpret.exec('a := ({x:1})')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x.value).toBe(1)
+})
+
+test('assignment object definition one simple attribute #2', () => {
+  interpret.exec('a := {_x1:1}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value._x1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value._x1.value).toBe(1)
+})
+
+test('assignment object definition one simple attribute #3', () => {
+  interpret.exec('a := {  \n\n _x1   \n\n  :  \n\n  1  \n\n }')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value._x1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value._x1.value).toBe(1)
+})
+
+test('assignment object definition one simple attribute #4', () => {
+  interpret.exec('a := {x:""}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.x.value).toBe('')
+})
+
+test('assignment object definition one simple attribute #5', () => {
+  interpret.exec('a := {x:"abc"}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.x.value).toBe('abc')
+})
+
+test('assignment object definition one simple attribute #6', () => {
+  interpret.exec('a := {x:"abc,a:3,x:4"}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.x.value).toBe('abc,a:3,x:4')
+})
+
+test('assignment object definition two simple attributes', () => {
+  interpret.exec('a := {x:1, y:2}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x.value).toBe(1)
+  expect(interpret.variables.get('a').value.y.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.y.value).toBe(2)
+})
+
+test('assignment object definition two simple attributes #2', () => {
+  interpret.exec('a := {x:1, y:"abc"}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x.value).toBe(1)
+  expect(interpret.variables.get('a').value.y.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.y.value).toBe('abc')
+})
+
+test('assignment object definition two simple attributes #3', () => {
+  interpret.exec('a := {x:123, y:"abc,a:3"}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x.value).toBe(123)
+  expect(interpret.variables.get('a').value.y.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.y.value).toBe('abc,a:3')
+})
+
+test('assignment object definition two simple attributes #4', () => {
+  interpret.exec('_10:=10\na := {x_1:123,y_1:"abc,a:3",zzz:(_10 + 1)}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x_1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x_1.value).toBe(123)
+  expect(interpret.variables.get('a').value.y_1.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.y_1.value).toBe('abc,a:3')
+  expect(interpret.variables.get('a').value.zzz.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.zzz.value).toBe(11)
+})
+
+test('assignment object definition two simple attributes #5', () => {
+  interpret.exec('_10:=10\na := {x_1:123,y_1:"abc,a:3",zzz:(_10.plus(2) + 1 * 2)}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x_1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x_1.value).toBe(123)
+  expect(interpret.variables.get('a').value.y_1.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.y_1.value).toBe('abc,a:3')
+  expect(interpret.variables.get('a').value.zzz.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.zzz.value).toBe(14)
+})
+
+test('assignment object definition two complex attributes', () => {
+  interpret.exec('a := {o:{}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value)).toHaveLength(0)
+})
+
+test('assignment object definition two complex attributes #2', () => {
+  interpret.exec('a := {o:{p:1}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.value.p.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o.value.p.value).toBe(1)
+})
+
+test('assignment object definition two complex attributes #2 spaces and newlines', () => {
+  interpret.exec('a := {  \n\n   o \n\n  : \n\n   {   \n\n   p   \n\n   :    \n\n 1   \n\n   }   \n\n  }')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.value.p.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o.value.p.value).toBe(1)
+})
+
+test('assignment object definition two complex attributes #3', () => {
+  interpret.exec('a := {o1:{o2:123}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.value.o2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.o2.value).toBe(123)
+})
+
+test('assignment object definition two complex attributes #4', () => {
+  interpret.exec('a := {o1: {o2:123, p2: 1.plus(2) + 1 }}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.value.o2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.o2.value).toBe(123)
+  expect(interpret.variables.get('a').value.o1.value.p2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.p2.value).toBe(4)
+})
+
+test('assignment object definition two complex attributes #5', () => {
+  interpret.exec('a := {o1: {o2:123, p2: 1.plus(2) + 1, q2: "" }}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.value.o2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.o2.value).toBe(123)
+  expect(interpret.variables.get('a').value.o1.value.p2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.p2.value).toBe(4)
+  expect(interpret.variables.get('a').value.o1.value.q2.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.o1.value.q2.value).toBe('')
+})
+
+test('assignment object definition two complex attributes #6', () => {
+  interpret.exec('a := {o1: {o2:123, p2: 1.plus(2) + 1, q2: "" }, oo:{oo1 : 741, pp1: "abc"}, boo: true}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o1.value.o2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.o2.value).toBe(123)
+  expect(interpret.variables.get('a').value.o1.value.p2.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o1.value.p2.value).toBe(4)
+  expect(interpret.variables.get('a').value.o1.value.q2.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.o1.value.q2.value).toBe('')
+  expect(interpret.variables.get('a').value.oo.type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.oo.value.oo1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.oo.value.oo1.value).toBe(741)
+  expect(interpret.variables.get('a').value.oo.value.pp1.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.oo.value.pp1.value).toBe('abc')
+  expect(interpret.variables.get('a').value.boo.type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value.boo.value).toBe(true)
+})
+
+test('assignment object definition two complex attributes #7', () => {
+  interpret.exec('_10:=10\na := {x_1:123,y_1:"abc,a:3",zzz:(_10.plus(2) + 1 * 2)}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.x_1.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.x_1.value).toBe(123)
+  expect(interpret.variables.get('a').value.y_1.type).toBe('STRING')
+  expect(interpret.variables.get('a').value.y_1.value).toBe('abc,a:3')
+  expect(interpret.variables.get('a').value.zzz.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.zzz.value).toBe(14)
+})
+
+test('assignment object definition array empty', () => {
+  interpret.exec('a := {arr: []}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value).toHaveLength(0)
+  expect(interpret.variables.get('a').value.arr.value).toEqual(expect.arrayContaining([]))
+})
+
+test('assignment object definition array', () => {
+  interpret.exec('a := {arr: [1]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value).toHaveLength(1)
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[0].value).toBe(1)
+})
+
+test('assignment object definition array #2', () => {
+  interpret.exec('a := {arr: [1,2,3]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value).toHaveLength(3)
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[0].value).toBe(1)
+  expect(interpret.variables.get('a').value.arr.value[1].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[1].value).toBe(2)
+  expect(interpret.variables.get('a').value.arr.value[2].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[2].value).toBe(3)
+})
+
+test('assignment object definition array #3', () => {
+  interpret.exec('a := {arr: [1,2,385]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value).toHaveLength(3)
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[0].value).toBe(1)
+  expect(interpret.variables.get('a').value.arr.value[1].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[1].value).toBe(2)
+  expect(interpret.variables.get('a').value.arr.value[2].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[2].value).toBe(385)
+})
+
+test('assignment object definition array #4', () => {
+  interpret.exec('a := {arr: [1,2, (385.plus(1))]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value).toHaveLength(3)
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[0].value).toBe(1)
+  expect(interpret.variables.get('a').value.arr.value[1].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[1].value).toBe(2)
+  expect(interpret.variables.get('a').value.arr.value[2].type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[2].value).toBe(386)
+})
+
+test('assignment object definition array object', () => {
+  interpret.exec('a := {arr: [{}]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.arr.value[0].value)).toHaveLength(0)
+})
+
+test('assignment object definition array object #2', () => {
+  interpret.exec('a := {arr:[{a:1}]}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.type).toBe('ARRAY')
+  expect(interpret.variables.get('a').value.arr.value[0].type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.arr.value[0].value.a.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.arr.value[0].value.a.value).toBe(1)
+})
+
+test('assignment object definition objects empty', () => {
+  interpret.exec('a := {o:{o:{o:1}}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.o.value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value.o.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.o.value.o.value.o.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o.value.o.value.o.value).toBe(1)
+})
+
+test('assignment object definition objects', () => {
+  interpret.exec('a := {o:{o:{}}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.o.value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value.o.value)).toHaveLength(0)
+})
+
+test('assignment object definition objects #2', () => {
+  interpret.exec('a := {o:{o:1},p:{o:2}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.o.value.o.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o.value.o.value).toBe(1)
+
+  expect(interpret.variables.get('a').value.p.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.p.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.p.value.o.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.p.value.o.value).toBe(2)
+})
+
+test('assignment object definition objects #3', () => {
+  interpret.exec('_x:=123\na := {o:{o:1},p:{o: _x.minus(120) - 1}}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+
+  expect(interpret.variables.get('a').value.o.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.o.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.o.value.o.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.o.value.o.value).toBe(1)
+
+  expect(interpret.variables.get('a').value.p.type).toBe('OBJECT')
+  expect(Object.keys(interpret.variables.get('a').value.p.value)).toHaveLength(1)
+  expect(interpret.variables.get('a').value.p.value.o.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.p.value.o.value).toBe(2)
+})
+
+test('assignment object definition objects #4', () => {
+  interpret.exec('a := {a:1}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+  expect(interpret.variables.get('a').value.a.type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value.a.value).toBe(1)
+})
+
+test('assignment object definition access', () => {
+  interpret.exec('a := {a:1}.a')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment object definition access #2', () => {
+  interpret.exec('a := {a:1, b:2}.b')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment object definition objects #3', () => {
+  interpret.exec('a := {o:{o:1},p:{o:2}}.o.o')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment object definition objects #4', () => {
+  interpret.exec('a := {o:{o:1},p:{o:2}}.p.o')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment object definition objects #5', () => {
+  interpret.exec('a := {o:[1]}.o[0]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment object definition objects #6', () => {
+  interpret.exec('a := {o:[1]}.o[0] + {p:[2]}.p[0]')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object definition objects #7', () => {
+  interpret.exec('a := {o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * 2')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(208)
+})
+
+test('assignment error object definition', () => {
+  expect(() => interpret.exec('a := {')).toThrow()
+  expect(() => interpret.exec('a := }')).toThrow()
+  expect(() => interpret.exec('a := {}}')).toThrow()
+  expect(() => interpret.exec('a := {{}')).toThrow()
+  expect(() => interpret.exec('a := {:}')).toThrow()
+  expect(() => interpret.exec('a := {,}')).toThrow()
+  expect(() => interpret.exec('a := {a:}')).toThrow()
+  expect(() => interpret.exec('a := {:1}')).toThrow()
+  expect(() => interpret.exec('a := {1:}')).toThrow()
+  expect(() => interpret.exec('a := {1:2}')).toThrow()
+  expect(() => interpret.exec('a := {}{}')).toThrow()
+  expect(() => interpret.exec('a := {{}}')).toThrow()
+  expect(() => interpret.exec('a := {{}:1}')).toThrow()
+  expect(() => interpret.exec('a := {a:1}}')).toThrow()
+  expect(() => interpret.exec('a := {{a:1}')).toThrow()
+  expect(() => interpret.exec('a := ({a:1}')).toThrow()
+  expect(() => interpret.exec('a := {a:1})')).toThrow()
+  expect(() => interpret.exec('a := {(a):1}')).toThrow()
 })

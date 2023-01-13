@@ -172,3 +172,12 @@ test('expression array access two dimensions', () => {
 test('expression array access two dimensions #2', () => {
   expect(interpret.exec('[[1,2],[3]][0 + 0.plus(0), 123.minus(123) + 1]').value).toBe(2)
 })
+
+test('expression object access', () => {
+  expect(interpret.exec('{a:1}.a').value).toBe(1)
+  expect(interpret.exec('{o:{o:1},p:{o:2}}.o.o').value).toBe(1)
+  expect(interpret.exec('{o:{o:1},p:{o:2}}.p.o').value).toBe(2)
+  expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * 2').value).toBe(208)
+  expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * 2 + {o:[1]}.o[0]').value).toBe(209)
+  expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * (1 + {o:[1]}.o[0])').value).toBe(208)
+})
