@@ -101,6 +101,14 @@ test('expression number var multiple lines', () => {
   expect(interpret.exec('\n\na := 1\n\n\n\n(123 + (a)) * 2\n\n').value).toBe(248)
 })
 
+test('expression error wrong var name', () => {
+  expect(() => interpret.exec('1a')).toThrow()
+})
+
+test('expression error wrong value', () => {
+  expect(() => interpret.exec('1 2')).toThrow()
+})
+
 test('expression in the middle', () => {
   expect(interpret.exec('a := 1\n(123 + 1)\n\n5 + 2').value).toBe(7)
 })
@@ -180,4 +188,12 @@ test('expression object access', () => {
   expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * 2').value).toBe(208)
   expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * 2 + {o:[1]}.o[0]').value).toBe(209)
   expect(interpret.exec('{o:{o:[1,2,[3,4]]}}.o.o[2,1].plus(100) * (1 + {o:[1]}.o[0])').value).toBe(208)
+})
+
+test('expression function call', () => {
+  expect(interpret.exec('f := (){1}\nf()').value).toBe(1)
+  expect(interpret.exec('f := (x){x}\nf(2)').value).toBe(2)
+  expect(interpret.exec('f := (x){x+1}\nf(2)').value).toBe(3)
+  expect(interpret.exec('f := (x,y){_ := y + 1\ny := x + 5\n_+y}\nf(1,2)').value).toBe(9)
+  expect(interpret.exec('f := (x,y){o := { x:y, z:x }\ny := o.x + 5\no.z + y}\nf(1,2)').value).toBe(8)
 })

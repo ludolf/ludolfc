@@ -324,11 +324,23 @@ test('assignment error wrong var name #4', () => {
 })
 
 test('assignment error wrong var name #5', () => {
+  expect(() => interpret.exec('$ := 2')).toThrow()
+})
+
+test('assignment error wrong var name #6', () => {
+  expect(() => interpret.exec('# := 2')).toThrow()
+})
+
+test('assignment error wrong var name #7', () => {
   expect(() => interpret.exec('💩 := 2')).toThrow()
 })
 
 test('assignment error wrong value', () => {
   expect(() => interpret.exec('a := 1b')).toThrow()
+})
+
+test('assignment error wrong value #2', () => {
+  expect(() => interpret.exec('a := 1 2')).toThrow()
 })
 
 test('assignment error var wrong reference', () => {
@@ -2391,4 +2403,236 @@ test('assignment error object definition', () => {
   expect(() => interpret.exec('a := ({a:1}')).toThrow()
   expect(() => interpret.exec('a := {a:1})')).toThrow()
   expect(() => interpret.exec('a := {(a):1}')).toThrow()
+})
+
+test('assignment function empty', () => {
+  interpret.exec('f := (){}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function empty spaces', () => {
+  interpret.exec('f := ( ) { } ')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function empty spaces and newlines', () => {
+  interpret.exec('f := (  \n\n  )  \n\n  {  \n\n  }  ')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function empty exec', () => {
+  interpret.exec('f := (){}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('VOID')
+  expect(interpret.variables.get('a').value).toBe(null)
+})
+
+test('assignment function simple', () => {
+  interpret.exec('f := (){1}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function simple exec', () => {
+  interpret.exec('f := (){1}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment function simple #2', () => {
+  interpret.exec('f := (){ 1 + 2 }')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function simple #2 spaces and newlines', () => {
+  interpret.exec('f := (){\n\n  1 + 2  \n\n}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function simple exec #2', () => {
+  interpret.exec('f := (){ 1 + 2 }\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment function', () => {
+  interpret.exec('f := (){\nx := 2\nx + x / 2\n}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function exec', () => {
+  interpret.exec('f := (){\nx := 2\nx + x / 2\n}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment function exec #2', () => {
+  interpret.exec('f := (){\nx := 2\ny := x + x / 2\nx + y\n}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment function one arg', () => {
+  interpret.exec('f := (x){x}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function one arg exec', () => {
+  interpret.exec('f := (x){x}\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment function one arg #2', () => {
+  interpret.exec('f := (_x1){_x1}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function one arg exec #2', () => {
+  interpret.exec('f := (_x1){_x1}\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment function one arg #3', () => {
+  interpret.exec('f := (x){ x + 1 }')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function one arg exec #3', () => {
+  interpret.exec('f := (x){ x + 1 }\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment function one arg #4', () => {
+  interpret.exec('f := (x){ x : = x + 1\nx + 3 }')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function one arg exec #4', () => {
+  interpret.exec('f := (x){ x := x + 1\nx + 3 }\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment function one arg exec #4 spaces and newlines', () => {
+  interpret.exec('f := (  x  ) \n {\n   x := x + 1\nx + 3 }\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(5)
+})
+
+test('assignment function args', () => {
+  interpret.exec('f := (x,y){x+y}')
+  expect(interpret.variables.has('f')).toBe(true)
+  expect(interpret.variables.get('f').type).toBe('FUNCTION')
+})
+
+test('assignment function args exec', () => {
+  interpret.exec('f := (x,y){x+y}\na := f(1,2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment function args exec #2', () => {
+  interpret.exec('f := (x,y){_ := y + 1\ny := x + 5\n_+y}\na := f(1,2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(9)
+})
+
+test('assignment function args exec #3', () => {
+  interpret.exec('f := (x){o := {v:x}\no.v}\na := f(1)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment function args exec #4', () => {
+  interpret.exec('f := (x,y){o := {x:y}\ny := x\ny + o.x}\na := f(1,2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment function args exec #5', () => {
+  interpret.exec('f := (x,y){o := { x:y, z:x }\ny := o.x + 5\no.z + y}\na := f(1,2)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(8)
+})
+
+test('assignment function args override exec', () => {
+  interpret.exec('x := 123\nf := (x){x}\na := f(1)\nb := x')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(123)
+})
+
+test('assignment function args override exec #2', () => {
+  interpret.exec('x := 123\nf := (x){x := x + 1\nx}\na := f(1)\nb := x')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(123)
+})
+
+test('assignment function args global exec', () => {
+  interpret.exec('x := 123\nf := (){x}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(123)
+})
+
+test('assignment error function definition', () => {
+  expect(() => interpret.exec('a := !(){}')).toThrow()
+  expect(() => interpret.exec('a := 1 + (){}')).toThrow()
+  expect(() => interpret.exec('a := 1 (){}')).toThrow()
+  expect(() => interpret.exec('a := (){} + 1')).toThrow()
+  expect(() => interpret.exec('a := (1){}')).toThrow()
+  expect(() => interpret.exec('a := (x,1){}')).toThrow()
+  expect(() => interpret.exec('a := (1,2){}')).toThrow()
+  expect(() => interpret.exec('a := (x,1,y){}')).toThrow()
+})
+
+test('assignment error function definition wrong body', () => {
+  expect(() => interpret.exec('f := (){1a}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (){()}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (){{:}}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (){[,]}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (){ 1 2 }\nf()')).toThrow()
+  expect(() => interpret.exec('f := (){ * 1 2 }\nf()')).toThrow()
+})
+
+test('assignment error function definition wrong call', () => {
+  expect(() => interpret.exec('f := (x){x}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (x){x}\nf(1,2)')).toThrow()
+  expect(() => interpret.exec('f := (x,y){x+y}\nf()')).toThrow()
+  expect(() => interpret.exec('f := (x,y){x+y}\nf(1)')).toThrow()
+  expect(() => interpret.exec('f := (x,y){x+y}\nf(1,2,3)')).toThrow()
 })
