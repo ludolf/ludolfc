@@ -2600,6 +2600,19 @@ test('assignment function args override exec #2', () => {
   expect(interpret.variables.has('b')).toBe(true)
   expect(interpret.variables.get('b').type).toBe('NUMBER')
   expect(interpret.variables.get('b').value).toBe(123)
+  expect(interpret.variables.has('x')).toBe(true)
+  expect(interpret.variables.get('x').type).toBe('NUMBER')
+  expect(interpret.variables.get('x').value).toBe(123)
+})
+
+test('assignment function args override exec #3', () => {
+  interpret.exec('x := 1\nf := (x){y := x + 1\ng := (x){ x + y }\ng(2)}\na := f(3)')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(6)
+  expect(interpret.variables.has('x')).toBe(true)
+  expect(interpret.variables.get('x').type).toBe('NUMBER')
+  expect(interpret.variables.get('x').value).toBe(1)
 })
 
 test('assignment function args global exec', () => {
@@ -2607,6 +2620,20 @@ test('assignment function args global exec', () => {
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(123)
+})
+
+test('assignment function args global exec #2', () => {
+  interpret.exec('x := 123\nf := (){g := (){x}\ng()}\na := f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(123)
+})
+
+test('assignment function nested', () => {
+  interpret.exec('x := 10\nf := (x){ x+1 }\ng := (x){ x*2 }\na := f(g(x))')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(21)
 })
 
 test('assignment error function definition', () => {
@@ -2635,4 +2662,5 @@ test('assignment error function definition wrong call', () => {
   expect(() => interpret.exec('f := (x,y){x+y}\nf()')).toThrow()
   expect(() => interpret.exec('f := (x,y){x+y}\nf(1)')).toThrow()
   expect(() => interpret.exec('f := (x,y){x+y}\nf(1,2,3)')).toThrow()
+  expect(() => interpret.exec('f := (){ g(){} \n 1}\ng()')).toThrow()
 })

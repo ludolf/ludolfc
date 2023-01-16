@@ -649,42 +649,38 @@ class LudolfC {
     }
 
     _parseFunction(source) {
-        source.move()
         const args = this._readArguments(source)
-        source.move()
         const body = this._parseFuncBody(source)
-        source.move()
 
         return /^\s*$/.test(body) ? new LangNativeFunction(() => new LangVoid()) : new LangFunction(body, args)
     }
     
     _readArguments(source) {
         consumeSpaces(source)
-        if (')' === source.currentChar()) {
-            return []
-        } else {    // multiple arguments
-            const args = []
-            let first = true
-            do {
-                if (!first) {
-                    source.move()
-                }
-                first = false
 
-                const name = this._readIdentifier(source)
-                args.push(name)
+        if ('(' !== source.currentChar()) {
+            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '(', source.currentChar())
+        }       
+        source.move()
+        consumeSpaces(source) 
 
-                consumeSpaces(source)
+        const args = []
+        let first = true
+        while((',' === source.currentChar() || ')' !== source.currentChar()) && !source.finished()) {
+            if (!first) source.move()
+            first = false
 
-            } while(',' === source.currentChar() && !source.finished())
+            const name = this._readIdentifier(source)
+            args.push(name)
 
             consumeSpaces(source)
-
-            if (')' !== source.currentChar()) {
-                throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, ')', source.currentChar())
-            }
-            return args
         }
+
+        if (')' !== source.currentChar()) {
+            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, ')', source.currentChar())
+        }
+        source.move()
+        return args
     }
 
     _parseFuncBody(source) {
@@ -697,26 +693,22 @@ class LudolfC {
         source.move()
         consumeSpaces(source)
 
-        if ('}' === source.currentChar()) {
-            return ''
-        } else {            
-            let body = ''
-            let openQuotings = 0
-            do {
-                const c = source.currentChar()
-                body += c
-                source.move()
+        let body = ''
+        let openQuotings = 0
+        while((openQuotings || '}' !== source.currentChar()) && !source.finished()) {
+            const c = source.currentChar()
+            body += c
+            source.move()
 
-                if ('{' === c) openQuotings++
-                if ('}' === c) openQuotings--
+            if ('{' === c) openQuotings++
+            if ('}' === c) openQuotings--
+        } 
 
-            } while((openQuotings || '}' !== source.currentChar()) && !source.finished())
-
-            if ('}' !== source.currentChar()) {
-                throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '}', source.currentChar())
-            }
-            return body
+        if ('}' !== source.currentChar()) {
+            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '}', source.currentChar())
         }
+        source.move()
+        return body
     }
 
     _readString(source, quoting) {
