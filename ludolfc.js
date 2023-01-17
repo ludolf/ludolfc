@@ -52,12 +52,17 @@ class LangObject {
     constructor(value, type = Types.OBJECT) {
         this.value = value
         this.type = type
+        this.isObject = true
+        this.parent = null
     }
     attribute(name) {
-        return this[name] ? this[name] : this.value[name]
+        const value = this[name] ? this[name] : this.value[name]
+        if (value) return value
+        if (this.parent) return this.parent.attribute(name)
     }
     hasAttribute(name) {
-        return this[name] || this.value[name]
+        const hasValue = this[name] || this.value[name]
+        return hasValue || (this.parent && this.parent.hasAttribute(name))
     }
 }
 
@@ -122,17 +127,15 @@ class LangArray extends LangValueObject {
 }
 
 class LangFunction extends LangObject {
-    constructor(body, args, parent) {
+    constructor(body, args) {
         super(body, Types.FUNCTION)
         this.args = args
-        this.parent = parent
     }
     call(interpret, ...params) {
         if ((!params && this.args) || params.length !== this.args.length) {
             throw new LangError(Errors.FUNC_ARGUMENTS_MISHMASH, interpret.source.row, interpret.source.col)
         }
-        // TODO add this.parent as $ into variables
-        // cache variables
+        // cache scoped variables
         const cache = {}
         let i = 0
         for (let arg of this.args) {
@@ -141,18 +144,28 @@ class LangFunction extends LangObject {
             }
             interpret.variables.set(arg, params[i++])
         }
+        if (this.parent) {
+            // cache "this" object into variable $
+            if (interpret.variables.has('$')) {
+                cache['$'] = interpret.variables.get('$')
+            }
+            interpret.variables.set('$', this.parent)
+        }
         
         try {
             return interpret._execProgram(new Source(this.value))
 
         } finally {  // clean up variables
-            interpret.variables.delete('$')
+            if (cache['$'])
+                interpret.variables.set('$', cache['$'])
+            else 
+                interpret.variables.delete('$')
+
             for (let arg of this.args) {
-                if (cache[arg]) {
+                if (cache[arg]) 
                     interpret.variables.set(arg, cache[arg])
-                } else {
+                else
                     interpret.variables.delete(arg)
-                }
             }
         }
     }
@@ -420,7 +433,15 @@ class LudolfC {
 
                 consumeSpaces(source)
                 if ('}' === source.currentChar()) {
-                    members.push(new LangObject(attributes))
+                    const obj = new LangObject(attributes)
+                    // set the self reference
+                    for (let attr of Object.values(attributes)) {
+                        if (attr.isObject) {
+                            attr.parent = obj
+                        }
+                    }
+                    members.push(obj)
+                    
                     source.move()
                     openDefinitions.objects--
                     continue
@@ -585,6 +606,12 @@ class LudolfC {
                 // variable reference
                 if (this.variables.has(token)) {
                     return this.variables.get(token)
+                }
+                if (this.variables.has('$')) {
+                    const self = this.variables.get('$')
+                    if (self.hasAttribute(token)) {
+                        return self.attribute(token)
+                    }
                 }
                 throw new LangError(Errors.UNREFERENCED_VARIABLE, source.row, source.col, token)
                 

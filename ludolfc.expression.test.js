@@ -197,3 +197,8 @@ test('expression function call', () => {
   expect(interpret.exec('f := (x,y){_ := y + 1\ny := x + 5\n_+y}\nf(1,2)').value).toBe(9)
   expect(interpret.exec('f := (x,y){o := { x:y, z:x }\ny := o.x + 5\no.z + y}\nf(1,2)').value).toBe(8)
 })
+
+test('expression object inner attributes', () => {
+  expect(interpret.exec('o := { a:1, b:2, f:(){a+b} }\no.f()').value).toBe(3)
+  expect(interpret.exec('o := { a:1, b:{ c:2, f:(){a+c} } }\no.b.f()').value).toBe(3)
+})

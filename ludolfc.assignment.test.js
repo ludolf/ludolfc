@@ -2636,8 +2636,72 @@ test('assignment function nested', () => {
   expect(interpret.variables.get('a').value).toBe(21)
 })
 
+test('assignment object inner attributes', () => {
+  interpret.exec('o := {a:1,f:(){a}}\na := o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment object inner attributes #1', () => {
+  interpret.exec('o := { a:1, b:(){a+1} }\na := o.b()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment object inner attributes #2', () => {
+  interpret.exec('o := { b:(){a+1}, a:1 }\na := o.b()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2)
+})
+
+test('assignment object inner attributes #3', () => {
+  interpret.exec('o := { a:1, b:2, f:(){a+b} }\na := o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object inner attributes #4', () => {
+  interpret.exec('o := { a:1, b:2, f:(){ g:=(){a+b}\ng()} }\na := o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object inner attributes #5', () => {
+  interpret.exec('o := { a:1, f:(){ b:=2\ng:=(){a+b}\ng()} }\na := o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object inner attributes #6', () => {
+  interpret.exec('o := { a:1, b:{ c:2, f:(){a+c} } }\na := o.b.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object inner attributes #7', () => {
+  interpret.exec('o := { a:1, o:{ aa:2, f:(){a+aa} } }\na := o.o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(3)
+})
+
+test('assignment object inner attributes #8', () => {
+  interpret.exec('o := { a:1, o:{ a:2, f:(){a+a} } }\na := o.o.f()')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(4)
+})
+
 test('assignment error function definition', () => {
   expect(() => interpret.exec('a := !(){}')).toThrow()
+  expect(() => interpret.exec('a := (){}.()')).toThrow()
   expect(() => interpret.exec('a := 1 + (){}')).toThrow()
   expect(() => interpret.exec('a := 1 (){}')).toThrow()
   expect(() => interpret.exec('a := (){} + 1')).toThrow()
