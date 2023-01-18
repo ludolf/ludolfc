@@ -20,6 +20,7 @@ const Errors = {
     ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
     ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
     FUNC_ARGUMENTS_MISHMASH: 'FUNC_ARGUMENTS_MISHMASH',
+    ATTRIBUTE_ALREADY_EXISTS: 'ATTRIBUTE_ALREADY_EXISTS',
 }
 
 const Types = {
@@ -55,10 +56,11 @@ class LangObject {
         this.isObject = true
         this.parent = null
     }
-    attribute(name) {
-        const value = this[name] ? this[name] : this.value[name]
+    attribute(name, valueToSet) {
+        const value = this[name] ? this[name] : this.value[name] // explicit attrs have priority over native ones
+        if (valueToSet && this.value[name]) this.value[name] = valueToSet
         if (value) return value
-        if (this.parent) return this.parent.attribute(name)
+        if (this.parent) return this.parent.attribute(name)        
     }
     hasAttribute(name) {
         const hasValue = this[name] || this.value[name]
@@ -121,8 +123,14 @@ class LangArray extends LangValueObject {
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
     }
-    element(...index) {
-        return index.reduce((a,c) => a.value[Math.ceil(c.value)], this)
+    element(indexes, valueToSet) {
+        return indexes.reduce((a,c,i) => {
+            const v = a.value[Math.ceil(c.value)]
+            // set the value for the last element
+            if (valueToSet && i === indexes.length - 1)
+                a.value[Math.ceil(c.value)] = valueToSet            
+            return v
+        }, this)
     }
 }
 
@@ -223,7 +231,7 @@ class Operator {
         }
     }
 
-    _precedence() { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+    _precedence() { // based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
         switch (this.op) {
             case '*':
             case '/':
@@ -244,8 +252,8 @@ class Operator {
 }
 
 class Source {
-    constructor(code) {
-        this.code = code + '\n'
+    constructor(code, addNewline = true) {
+        this.code = addNewline ? code + '\n' : code
         this.pos = 0
         this.row = 0
         this.col = 0
@@ -351,11 +359,13 @@ class LudolfC {
                 expecting = '='
             } else
             if (inAssignment) {  // variable assignment                
-                if (!new RegExp(`^${RE_IDENTIFIER}$`).test(token)) 
-                    throw new LangError(Errors.INVALID_IDENTIFIER, source.row, source.col, token)
-                
                 const value = this._execExpression(source, openDefinitions)
-                this.variables.set(token, value)
+                if (new RegExp(`^${RE_IDENTIFIER}$`).test(token)) {
+                    this.variables.set(token, value)
+                } else {
+                    if (!this._execExpression(new Source(token, false), {}, null, value))
+                        throw new LangError(Errors.INVALID_IDENTIFIER, source.row, source.col, token)
+                }
 
                 inAssignment = false
                 token = ''
@@ -375,7 +385,7 @@ class LudolfC {
         }
     }
 
-    _execExpression(source, openDefinitions, inGrouping = null) {
+    _execExpression(source, openDefinitions, inGrouping = null, valueToSet = null) {
         const members = []
         const uniops = []
         const biops = []
@@ -481,7 +491,15 @@ class LudolfC {
                 if (!members[idx].hasAttribute(attrName)) {
                     throw new LangError(Errors.ATTRIBUTE_NOT_EXISTS, source.row, source.col, attrName)
                 }
-                members[idx] = members[idx].attribute(attrName)
+                const value = members[idx].attribute(attrName)
+
+                // set the value for the last member
+                if (valueToSet && source.finished()) {
+                    if (members.length > 1) throw new LangError(Errors.INVALID_IDENTIFIER, source.row, source.col)
+                    members[idx].attribute(attrName, valueToSet)
+                    return value
+                }
+                members[idx] = value
                 continue
             }
 
@@ -496,11 +514,18 @@ class LudolfC {
 
                     if (']' === source.currentChar()) {
                         if (indexes.some(x => Types.NUMBER !== x.type)) throw new LangError(Errors.ARRAY_INDEX_NOT_NUMBER, source.row, source.col)
-                        const idx = members.length - 1
-                        const value = members[idx].element(...indexes)
-                        if (!value) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS, source.row, source.col)
-                        members[idx] = value
                         source.move()
+                        const idx = members.length - 1
+                        const value = members[idx].element(indexes)
+                        if (!value) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS, source.row, source.col)
+                        
+                        // set the value for the last member
+                        if (valueToSet && source.finished()) {
+                            if (members.length > 1) throw new LangError(Errors.INVALID_IDENTIFIER, source.row, source.col)
+                            members[idx].element(indexes, valueToSet)
+                            return value
+                        }
+                        members[idx] = value
                     } else {
                         throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
                     }
@@ -657,6 +682,9 @@ class LudolfC {
                 first = false
 
                 const name = this._readIdentifier(source)
+                if (attributes[name]) {
+                    throw new LangError(Errors.ATTRIBUTE_ALREADY_EXISTS, source.row, source.col, name)
+                }
                 consumeSpaces(source)
 
                 if (':' !== source.currentChar()) {

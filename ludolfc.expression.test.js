@@ -202,3 +202,15 @@ test('expression object inner attributes', () => {
   expect(interpret.exec('o := { a:1, b:2, f:(){a+b} }\no.f()').value).toBe(3)
   expect(interpret.exec('o := { a:1, b:{ c:2, f:(){a+c} } }\no.b.f()').value).toBe(3)
 })
+
+test('expression array element assignment', () => {
+  expect(interpret.exec('a := [1,2]\na[0] := 3\na[0]').value).toBe(3)
+  expect(interpret.exec('o := {a:[[1],[2,3]]}\no.a[1][0] := 4\no.a[1][0]').value).toBe(4)
+  expect(interpret.exec('a := [{a:[[1],[2,3]]}]\na[0].a[1][0] := 4\na[0].a[1][0]').value).toBe(4)
+  expect(interpret.exec('a := [{a:[[1],[2,3]]}]\na[0].a[1][0] := 4 + a[0].a[1][0]\na[0].a[1][0]').value).toBe(6)
+})
+
+test('expression object attribute assignment', () => {
+  expect(interpret.exec('a := {x:1, y:2}\na.x := 3\na.x').value).toBe(3)
+  expect(interpret.exec('a := [{a:{x:1, y:2}}]\na[0].a.x := 3\na[0].a.x').value).toBe(3)
+})

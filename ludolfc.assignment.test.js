@@ -391,6 +391,19 @@ test('assignment error incomplete', () => {
   expect(() => interpret.exec('a :=')).toThrow()
 })
 
+test('assignment error expression', () => {
+  expect(() => interpret.exec('a + 1 := 2')).toThrow()
+  expect(() => interpret.exec('a + a := 2')).toThrow()
+  expect(() => interpret.exec('a := 1\na + 1 := 2')).toThrow()
+  expect(() => interpret.exec('a := 1\na + a := 2')).toThrow()
+  expect(() => interpret.exec('a := [1]\na[0] + 1 := 2')).toThrow()
+  expect(() => interpret.exec('a := [1]\na[0] + a[0] := 2')).toThrow()
+  expect(() => interpret.exec('a := [1]\na[0] + a[0] + 1 := 2')).toThrow()
+  expect(() => interpret.exec('o := {a:1}\no.a + 1 := 2')).toThrow()
+  expect(() => interpret.exec('o := {a:1}\no.a + o.a := 2')).toThrow()
+  expect(() => interpret.exec('o := {a:1}\no.a + o.a + 1 := 2')).toThrow()
+})
+
 test('assignment error keywords', () => {
   expect(() => interpret.exec('true := 1')).toThrow()
   expect(() => interpret.exec('false := 1')).toThrow()
@@ -794,6 +807,60 @@ test('assignment simple uni expression minus #9', () => {
   expect(interpret.variables.has('a')).toBe(true)
   expect(interpret.variables.get('a').type).toBe('NUMBER')
   expect(interpret.variables.get('a').value).toBe(-123)
+})
+
+test('assignment simple type change', () => {
+  interpret.exec('a := 1\na := "A"')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('STRING')
+  expect(interpret.variables.get('a').value).toBe('A')
+})
+
+test('assignment simple type change #2', () => {
+  interpret.exec('a := 1\na := 2.34')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(2.34)
+})
+
+test('assignment simple type change #3', () => {
+  interpret.exec('a := 1\na := true')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple type change #4', () => {
+  interpret.exec('a := 1\na := a >= 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('BOOLEAN')
+  expect(interpret.variables.get('a').value).toBe(true)
+})
+
+test('assignment simple type change #5', () => {
+  interpret.exec('a := 1\na := {}')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('OBJECT')
+})
+
+test('assignment simple type change #6', () => {
+  interpret.exec('a := 1\na := []')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('ARRAY')
+})
+
+test('assignment simple type change #7', () => {
+  interpret.exec('a := {}\na := 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
+})
+
+test('assignment simple type change #8', () => {
+  interpret.exec('a := []\na := 1')
+  expect(interpret.variables.has('a')).toBe(true)
+  expect(interpret.variables.get('a').type).toBe('NUMBER')
+  expect(interpret.variables.get('a').value).toBe(1)
 })
 
 test('assignment op precedence', () => {
@@ -2403,6 +2470,7 @@ test('assignment error object definition', () => {
   expect(() => interpret.exec('a := ({a:1}')).toThrow()
   expect(() => interpret.exec('a := {a:1})')).toThrow()
   expect(() => interpret.exec('a := {(a):1}')).toThrow()
+  expect(() => interpret.exec('a := {a:1,a:2}')).toThrow()
 })
 
 test('assignment function empty', () => {
@@ -2727,4 +2795,138 @@ test('assignment error function definition wrong call', () => {
   expect(() => interpret.exec('f := (x,y){x+y}\nf(1)')).toThrow()
   expect(() => interpret.exec('f := (x,y){x+y}\nf(1,2,3)')).toThrow()
   expect(() => interpret.exec('f := (){ g(){} \n 1}\ng()')).toThrow()
+})
+
+test('assignment array element', () => {
+  interpret.exec('a := [1,2]\na[0] := 3\nb := a[0]\nc := a[1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment array element #2', () => {
+  interpret.exec('a := [[1],[2,3]]\na[1][0] := 4\nb := a[1][0]\nc := a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(4)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment array element #3', () => {
+  interpret.exec('o := {a:[[1],[2,3]]}\no.a[1][0] := 4\nb := o.a[1][0]\nc := o.a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(4)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment array element #4', () => {
+  interpret.exec('a := [{a:[[1],[2,3]]}]\na[0].a[1][0] := 4\nb := a[0].a[1][0]\nc := a[0].a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(4)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment array element #4 spaces', () => {
+  interpret.exec('a := [{a:[[1],[2,3]]}]\n  a  [  0  ]  .  a  [  1  ]  [  0  ]  :=  4  \nb := a[0].a[1][0]\nc := a[0].a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(4)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment array element #5', () => {
+  interpret.exec('a := [{a:[[1],[2,3]]}]\na[0].a[1][0] := 4 + a[0].a[1][0]\nb := a[0].a[1][0]\nc := a[0].a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(6)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment array element #5 no spaces', () => {
+  interpret.exec('a := [{a:[[1],[2,3]]}]\na[0].a[1][0]:=4+a[0].a[1][0]\nb := a[0].a[1][0]\nc := a[0].a[1][1]')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(6)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(3)
+})
+
+test('assignment error array element', () => {
+  expect(() => interpret.exec('a := []\na[0] := 1')).toThrow()
+})
+
+test('assignment object attribute', () => {
+  interpret.exec('a := {x:1, y:2}\na.x := 3\nb := a.x\nc := a.y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment object attribute #2', () => {
+  interpret.exec('a := [{x:1, y:2}]\na[0].x := 3\nb := a[0].x\nc := a[0].y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment object attribute #3', () => {
+  interpret.exec('a := [{a:{x:1, y:2}}]\na[0].a.x := 3\nb := a[0].a.x\nc := a[0].a.y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment object attribute #3 spaces', () => {
+  interpret.exec('a := [{a:{x:1, y:2}}]\n  a  [  0  ]  .  a  .  x  :=  3  \nb := a[0].a.x\nc := a[0].a.y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment object attribute #3 no spaces', () => {
+  interpret.exec('a := [{a:{x:1, y:2}}]\na[0].a.x:=3\nb := a[0].a.x\nc := a[0].a.y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
+})
+
+test('assignment object attribute #4 spaces and newlines', () => {
+  interpret.exec('a := [{a:{x:1, y:2}}]\n  a  [  0  ]  .  a  .  x  :=  {  \n\n z : 3 \n\n  }  \nb := a[0].a.x.z\nc := a[0].a.y')
+  expect(interpret.variables.has('b')).toBe(true)
+  expect(interpret.variables.get('b').type).toBe('NUMBER')
+  expect(interpret.variables.get('b').value).toBe(3)
+  expect(interpret.variables.has('c')).toBe(true)
+  expect(interpret.variables.get('c').type).toBe('NUMBER')
+  expect(interpret.variables.get('c').value).toBe(2)
 })
