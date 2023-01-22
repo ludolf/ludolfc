@@ -4,7 +4,7 @@
   "description": "LudolfC programming language",
   "main": "ludolfc.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --ci --testResultsProcessor=jest-junit"
   },
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
   },
   "keywords": [
     "ludolf",
+    "ludolfc",
     "programming",
     "kids"
   ],
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/ludolf/ludolfc#readme",
   "devDependencies": {
-    "jest": "^29.3.1"
+    "jest": "^29.3.1",
+    "jest-junit": "^15.0.0"
   }
 }
