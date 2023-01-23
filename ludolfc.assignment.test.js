@@ -37,17 +37,17 @@ test('assignment number simplest underscore varname', () => {
 })
 
 test('assignment number simplest national chars', () => {
-  ludolfC.execute('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ := 256')
-  expect(ludolfC.hasVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ')).toBe(true)
-  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ').type).toBe('NUMBER')
-  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ').value).toBe(256)
+  ludolfC.execute('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß := 256')
+  expect(ludolfC.hasVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß')).toBe(true)
+  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß').value).toBe(256)
 })
 
 test('assignment number simplest national chars #2', () => {
-  ludolfC.execute('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ := 256')
-  expect(ludolfC.hasVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ')).toBe(true)
-  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ').type).toBe('NUMBER')
-  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑ').value).toBe(256)
+  ludolfC.execute('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß := 256')
+  expect(ludolfC.hasVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß')).toBe(true)
+  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('ěščřžýáíéúůüöäñ_1ĚŠČŘŽÝÁÍÉÚŮÜÖÄÑß').value).toBe(256)
 })
 
 test('assignment number simplest national chars #4', () => {
@@ -2929,4 +2929,13 @@ test('assignment object attribute #4 spaces and newlines', () => {
   expect(ludolfC.hasVariable('c')).toBe(true)
   expect(ludolfC.getVariable('c').type).toBe('NUMBER')
   expect(ludolfC.getVariable('c').value).toBe(2)
+})
+
+test('assignment error array size', () => {
+  expect(() => ludolfC.execute('a := []\na.size := 1')).toThrow()
+  expect(() => ludolfC.execute('a := []\na.Size := 1')).toThrow()
+  expect(() => ludolfC.execute('a := []\na.velikost := 1')).toThrow()
+  expect(() => ludolfC.execute('a := []\na.Velikost := 1')).toThrow()
+  expect(() => ludolfC.execute('a := []\na.größe := 1')).toThrow()
+  expect(() => ludolfC.execute('a := []\na.Größe := 1')).toThrow()
 })

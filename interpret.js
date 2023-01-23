@@ -1,7 +1,7 @@
 const { 
-    Keywords,
     Errors,
     Types,
+    ArraySize,
     Block,
     Assignment,
     While,

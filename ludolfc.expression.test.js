@@ -214,3 +214,17 @@ test('expression object attribute assignment', () => {
   expect(ludolfC.execute('a := {x:1, y:2}\na.x := 3\na.x').value).toBe(3)
   expect(ludolfC.execute('a := [{a:{x:1, y:2}}]\na[0].a.x := 3\na[0].a.x').value).toBe(3)
 })
+
+test('expression array size', () => {
+  expect(ludolfC.execute('a := []\na.size').value).toBe(0)
+  expect(ludolfC.execute('a := [1,2,3]\na.size').value).toBe(3)
+  expect(ludolfC.execute('a := [[1,2],[3]]\na.size').value).toBe(2)
+  expect(ludolfC.execute('a := [[1,2],[3]]\na[0].size').value).toBe(2)
+  expect(ludolfC.execute('a := [[1,2],[3]]\na[1].size').value).toBe(1)
+})
+
+test('expression array size localized', () => {
+  expect(ludolfC.execute('a := []\na.velikost').value).toBe(0)
+  expect(ludolfC.execute('a := [1,2,3]\na.größe').value).toBe(3)
+  expect(ludolfC.execute('a := [[1,2],[3]]\na.Größe').value).toBe(2)
+})

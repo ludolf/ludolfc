@@ -6,6 +6,8 @@ const Keywords = {
     WHILE: ['while', 'dokud', 'soweit'],
 }
 
+const ArraySize = ['size', 'velikost', 'größe']
+
 const Errors = {
     INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
     INVALID_BI_OPERATOR: 'INVALID_BI_OPERATOR',
@@ -33,6 +35,7 @@ const Errors = {
     EXPECTED_OBJECT: 'EXPECTED_OBJECT',
     WRONG_ASSIGNMENT: 'WRONG_ASSIGNMENT',
     WRONG_ASSIGNEE_TYPE: 'WRONG_ASSIGNEE_TYPE',
+    READONLY_ATTRIBUTE: 'READONLY_ATTRIBUTE',
 }
 
 const Types = {
@@ -138,7 +141,6 @@ class UniOperator extends Operator {
         this.isUni = true
         this.precedence = this.getPrecedence()
     }
-
     apply(a) {
         switch (this.op) {
             case '!': 
@@ -146,7 +148,6 @@ class UniOperator extends Operator {
             default: throw new LangError(Errors.INVALID_UNI_OPERATOR, this.op)
         }
     }
-
     getPrecedence() { // based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
         switch (this.op) {
             case '!':
@@ -162,7 +163,6 @@ class BiOperator extends Operator {
         this.isBi = true
         this.precedence = this.getPrecedence()
     }
-
     apply(a, b) {
         switch (this.op) {
             case '*': return a.mult.call(null, b)
@@ -181,7 +181,6 @@ class BiOperator extends Operator {
             default: throw new LangError(Errors.INVALID_BI_OPERATOR, this.op)
         }
     }
-
     getPrecedence() { // based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
         switch (this.op) {
             case '*':
@@ -209,7 +208,6 @@ class ArrayAccess extends Operator {
         this.isArrayAccess = true
         this.indexes = indexes
     }
-
     apply(a, indexes, newValue) { // indexes are resolved, but this.indexes are AST (expressions)
         return a.element(indexes, newValue)
     }
@@ -222,7 +220,6 @@ class ObjectAccess extends Operator {
         this.isObjectAccess = true
         this.attrName = attrName
     }
-
     apply(o, newValue) {
         return o.attribute(this.attrName, newValue)
     }
@@ -319,7 +316,8 @@ class LangArray extends LangValueObject {
         super(value, Types.ARRAY)
 
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
-        this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
+
+        for (let s of ArraySize) this[s] = this.value.length
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
@@ -329,6 +327,16 @@ class LangArray extends LangValueObject {
                 a.value[Math.ceil(c.value)] = newValue            
             return v
         }, this)
+    }
+    attribute(name, newValue) {
+        if (ArraySize.includes(name.toLowerCase())) {
+            if (newValue) throw new LangError(Errors.READONLY_ATTRIBUTE)
+            return new LangNumber(this.value.length)
+        }
+        return super.attribute(name, newValue)
+    }
+    hasAttribute(name) {
+        return ArraySize.includes(name.toLowerCase()) || super.attribute(name, newValue)
     }
 }
 
@@ -362,6 +370,7 @@ module.exports = {
     Keywords,
     Errors,
     Types,
+    ArraySize,
     Block,
     Assignment,
     While,
