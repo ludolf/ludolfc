@@ -186,8 +186,8 @@ class ArrayAccess extends Operator {
         this.indexes = indexes
     }
 
-    apply(a, index, newValue) { // index is resolved and one-dimensional, but this.indexes are AST
-        return a.element(index, newValue)
+    apply(a, indexes, newValue) { // indexes are resolved, but this.indexes are AST (expressions)
+        return a.element(indexes, newValue)
     }
 }
 
@@ -297,10 +297,14 @@ class LangArray extends LangValueObject {
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
     }
-    element(index, newValue) {
-        const value = this.value[Math.ceil(index.value)]
-        if (newValue) this.value[Math.ceil(index.value)] = newValue  
-        return value
+    element(indexes, newValue) {
+        return indexes.reduce((a,c,i) => {
+            const v = a.value[Math.ceil(c.value)]
+            // set the value for the last element
+            if (newValue && i === indexes.length - 1)
+                a.value[Math.ceil(c.value)] = newValue            
+            return v
+        }, this)
     }
 }
 

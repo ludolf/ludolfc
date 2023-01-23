@@ -78,8 +78,7 @@ class Interpret {
                 const a = this.executeExpressionPart(parts[index - 1])
                 if (Types.ARRAY !== a.type) throw new Error('Not an array') // TODO
                 const indexes = op.indexes.map(i => this.executeExpressionPart(i))
-                parts[index] = indexes.reduce((a,i,ci) => this.executeExpressionPart(
-                    op.apply(a, i, (assignNewValue && isLastOperator() && ci === indexes.length - 1) ? assignNewValue : null)), a)
+                parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
             } else 
             if (op.isObjectAccess) {
@@ -126,6 +125,18 @@ class Interpret {
         }
         if (expressionPart.isExpression) {
             return this.executeExpression(expressionPart)
+        }
+        if (Types.ARRAY === expressionPart.type) {
+            const arr = expressionPart.value
+            for (let i = 0; i < arr.length; i++) {
+                arr[i] = this.executeExpressionPart(arr[i])
+            }
+        } else
+        if (Types.OBJECT === expressionPart.type) {
+            const obj = expressionPart.value
+            for (let k of Object.keys(obj)) {
+                obj[k] = this.executeExpressionPart(obj[k])
+            }
         }
         return expressionPart
     }

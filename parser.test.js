@@ -292,6 +292,24 @@ test('parser expression array #2', () => {
   expect(ast.statements[0].parts[0].value[2].parts[0].value).toBe(true)
 })
 
+test('parser expression array expression', () => {
+  const ast = parser.parse('[1+2]')
+  expect(ast.statements).toHaveLength(1)
+  expect(ast.statements[0].isExpression).toBe(true)
+  expect(ast.statements[0].parts).toHaveLength(1)
+  expect(ast.statements[0].parts[0].type).toBe('ARRAY')
+  expect(ast.statements[0].parts[0].value).toHaveLength(1)
+  expect(ast.statements[0].parts[0].value[0].isExpression).toBe(true)
+  expect(ast.statements[0].parts[0].value[0].parts).toHaveLength(3)
+  expect(ast.statements[0].parts[0].value[0].parts[0].type).toBe('NUMBER')
+  expect(ast.statements[0].parts[0].value[0].parts[0].value).toBe(1)
+  expect(ast.statements[0].parts[0].value[0].parts[1].isOperator).toBe(true)
+  expect(ast.statements[0].parts[0].value[0].parts[1].isBi).toBe(true)
+  expect(ast.statements[0].parts[0].value[0].parts[1].op).toBe('+')
+  expect(ast.statements[0].parts[0].value[0].parts[2].type).toBe('NUMBER')
+  expect(ast.statements[0].parts[0].value[0].parts[2].value).toBe(2)
+})
+
 test('parser expression array dimensions', () => {
   const ast = parser.parse('[[1],[2,3]]')
   expect(ast.statements).toHaveLength(1)

@@ -206,6 +206,41 @@ test('interpret expression array complex access', () => {
   expect(result.value).toBe(9)
 })
 
+test('parser expression array expression', () => {
+  const ast = parser.parse('[1+2][0]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('parser expression array expression resolved', () => {
+  const ast = parser.parse('a:=1\nb:=[a]\na:=2\nb[0]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('parser expression array expression resolved #2', () => {
+  const ast = parser.parse('a:=1\nf:=(){a:=2}\nb:=[f()]\na=2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('parser expression array expression resolved', () => {
+  const ast = parser.parse('a:=1\nb:={a:a}\na:=2\nb.a')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('parser expression object expression resolved #2', () => {
+  const ast = parser.parse('a:=1\nf:=(){a:=2}\nb:={a:f()}\na=2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
 test('interpret assignment number simplest', () => {
   const ast = parser.parse('a := 1\na')
   const result = interpret.execute(ast)
