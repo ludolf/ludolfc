@@ -14,7 +14,7 @@ const {
     ObjectAccess,
     FunctionCall,
     VarReference,
-    LangError,
+    LangInterpretError,
     LangObject,
     LangNumber,
     LangString,
@@ -52,32 +52,32 @@ class Interpret {
     }
 
     executeExpression(expression, assignNewValue = null) {
-        if (!expression.parts) throw new Error('Empty expression') // TODO
+        if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION)
         let parts = expression.parts
         let index
         let assignApplied = false
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
 
-            if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new Error('Access operator expected') // TODO
+            if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED)
 
             if (op.isUni) {
                 const a = this.executeExpressionPart(parts[index + 1])
-                if (!a.type) throw new Error('Wrong subject') // TODO
+                if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT)
                 parts[index] = op.apply(a)
                 parts = removeElementAt(parts, index + 1)
             } else 
             if (op.isBi) {
                 const a = this.executeExpressionPart(parts[index - 1])
                 const b = this.executeExpressionPart(parts[index + 1])
-                if (!a.type || !b.type) throw new Error('Wrong subjects') // TODO
-                if (a.type !== b.type) throw new Error('Unmatching subjects') // TODO
+                if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+                if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
                 parts[index] = op.apply(a, b)
                 parts = removeElementAt(parts, index - 1, index + 1)
             } else 
             if (op.isArrayAccess) {
                 const a = this.executeExpressionPart(parts[index - 1])
-                if (Types.ARRAY !== a.type) throw new Error('Not an array') // TODO
+                if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY)
                 const indexes = op.indexes.map(i => this.executeExpressionPart(i))
                 parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
@@ -85,7 +85,7 @@ class Interpret {
             } else 
             if (op.isObjectAccess) {
                 const o = this.executeExpressionPart(parts[index - 1])
-                if (!o.isObject) throw new Error('Not an object') // TODO
+                if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT)
                 parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
                 assignApplied = true
@@ -96,10 +96,10 @@ class Interpret {
                 parts[index] = this.executeFunctionCall(f, params)
                 parts = removeElementAt(parts, index - 1)
             }
-            else throw new Error('Operator unknown') // TODO
+            else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR)
         }
 
-        if (assignNewValue && !assignApplied) throw new Error('Access operator not found') // TODO
+        if (assignNewValue && !assignApplied) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED)
 
         return this.executeExpressionPart(parts[0]) // parts are reduced to a single result
 
@@ -128,7 +128,7 @@ class Interpret {
 
     executeExpressionPart(expressionPart) {
         if (expressionPart.isReference) {
-            if (!this.hasVariable(expressionPart.varName)) throw new Error('Unreferenced variable') // TODO
+            if (!this.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE)
             return this.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
@@ -155,21 +155,17 @@ class Interpret {
             return f.value(...params)
         }
 
-        if ((!params && f.args) || params.length !== f.args.length) throw new Error(Errors.FUNC_ARGUMENTS_MISHMASH) // TODO
+        if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH)
         // cache scoped variables
         const cache = {}
         let i = 0
         for (let arg of f.args) {
-            if (this.variables.has(arg)) {
-                cache[arg] = this.variables.get(arg)
-            }
+            if (this.variables.has(arg)) cache[arg] = this.variables.get(arg)
             this.variables.set(arg, params[i++])
         }
         if (f.parent) {
             // cache "this" object into variable $
-            if (this.variables.has('$')) {
-                cache['$'] = this.variables.get('$')
-            }
+            if (this.variables.has('$')) cache['$'] = this.variables.get('$')
             this.variables.set('$', f.parent)
         }
         
@@ -178,22 +174,18 @@ class Interpret {
             return result
 
         } finally {  // clean up variables
-            if (cache['$'])
-                this.variables.set('$', cache['$'])
-            else 
-                this.variables.delete('$')
+            if (cache['$']) this.variables.set('$', cache['$'])
+            else this.variables.delete('$')
 
             for (let arg of f.args) {
-                if (cache[arg]) 
-                    this.variables.set(arg, cache[arg])
-                else
-                    this.variables.delete(arg)
+                if (cache[arg]) this.variables.set(arg, cache[arg])
+                else this.variables.delete(arg)
             }
         }
     }
 
     executeAssignemt(assignment) {
-        if (!assignment.left || !assignment.right) throw new Error('Wrong assignement') // TODO
+        if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT)
         const value = this.executeExpressionPart(assignment.right)
         if (assignment.left.isVariable) {
             this.variables.set(assignment.left.name, value)
@@ -201,7 +193,7 @@ class Interpret {
         if (assignment.left.isExpression) {
             this.executeExpression(assignment.left, value)
         }
-        else throw new Error('Wrong assignement left type') // TODO
+        else throw new LangInterpretError(Errors.WRONG_ASSIGNEE_TYPE)
     }
 
     executeWhile(whileStm) {

@@ -7,6 +7,8 @@ const Keywords = {
 }
 
 const Errors = {
+    INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
+    INVALID_BI_OPERATOR: 'INVALID_BI_OPERATOR',
     UNEXPECTED_END: 'UNEXPECTED_END',
     UNEXPECTED_SYMBOL: 'UNEXPECTED_SYMBOL',
     EXPECTED_SYMBOL: 'EXPECTED_SYMBOL',
@@ -21,6 +23,16 @@ const Errors = {
     ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
     FUNC_ARGUMENTS_MISHMASH: 'FUNC_ARGUMENTS_MISHMASH',
     ATTRIBUTE_ALREADY_EXISTS: 'ATTRIBUTE_ALREADY_EXISTS',
+    EMPTY_EXPRESSION: 'EMPTY_EXPRESSION',
+    UNKNOWN_OPERATOR: 'UNKNOWN_OPERATOR',
+    ACCESS_OPERATOR_EXPECTED: 'ACCESS_OPERATOR_EXPECTED',
+    WRONG_UNI_OPERATOR_SUBJECT: 'WRONG_UNI_OPERATOR_SUBJECT',
+    WRONG_BI_OPERATOR_SUBJECTS: 'WRONG_BI_OPERATOR_SUBJECTS',
+    UNMATCHING_BI_OPERATOR_SUBJECTS: 'UNMATCHING_BI_OPERATOR_SUBJECTS',
+    EXPECTED_ARRAY: 'EXPECTED_ARRAY',
+    EXPECTED_OBJECT: 'EXPECTED_OBJECT',
+    WRONG_ASSIGNMENT: 'WRONG_ASSIGNMENT',
+    WRONG_ASSIGNEE_TYPE: 'WRONG_ASSIGNEE_TYPE',
 }
 
 const Types = {
@@ -34,11 +46,23 @@ const Types = {
 }
 
 class LangError extends Error {
-    constructor(id, row, col, arg1, arg2) {
-        super(`Error ${id} at ${row}:${col}`)
+    constructor(id, arg1, arg2) {
+        super(`Error ${id} ${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`)
         this.id = id
         this.arg1 = arg1
         this.arg2 = arg2
+    }
+}
+
+class LangParseError extends LangError {
+    constructor(id, arg1, arg2) {
+        super(id, arg1, arg2)
+    }
+}
+
+class LangInterpretError extends LangError {
+    constructor(id, arg1, arg2) {
+        super(id, arg1, arg2)
     }
 }
 
@@ -119,7 +143,7 @@ class UniOperator extends Operator {
         switch (this.op) {
             case '!': 
             case '-': return a.neg.call()
-            default: throw new Error('Invalid uni operator ' + this.op)
+            default: throw new LangError(Errors.INVALID_UNI_OPERATOR, this.op)
         }
     }
 
@@ -154,7 +178,7 @@ class BiOperator extends Operator {
             case '!=': return a.ne.call(null, b)
             case '&': return a.and.call(null, b)
             case '|': return a.or.call(null, b)
-            default: throw new Error('Invalid bi operator ' + this.op)
+            default: throw new LangError(Errors.INVALID_BI_OPERATOR, this.op)
         }
     }
 
@@ -350,7 +374,8 @@ module.exports = {
     ObjectAccess,
     FunctionCall,
     VarReference,
-    LangError,
+    LangParseError,
+    LangInterpretError,
     LangObject,
     LangNumber,
     LangString,

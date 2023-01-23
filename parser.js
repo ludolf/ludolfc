@@ -13,7 +13,7 @@ const {
     ObjectAccess,
     FunctionCall,
     VarReference,
-    LangError,
+    LangParseError,
     LangObject,
     LangNumber,
     LangString,
@@ -108,7 +108,7 @@ class Parser {
             if (!expecting && isSpace(c) && !/^[0-9]+$/.test(token)) continue
 
             if (expecting && c !== expecting) {
-                throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, expecting, c)
+                throw new LangParseError(Errors.EXPECTED_SYMBOL, expecting, c)
             }
             if (expecting === '=' && c === expecting) {
                 inAssignment = true
@@ -128,8 +128,8 @@ class Parser {
             }
 
             if (':' === c && !openDefinitions.objects) {    // assignment starting
-                if (!(token.length)) throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
-                if (isKeyword(token)) throw new LangError(Errors.UNEXPEXTED_KEYWORD, source.row, source.col, c)
+                if (!(token.length)) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
+                if (isKeyword(token)) throw new LangParseError(Errors.UNEXPEXTED_KEYWORD, c)
                 expecting = '='
             } else
             if (inAssignment) {  // variable assignment                
@@ -141,7 +141,7 @@ class Parser {
                 } else {
                     const exp = this.parseExpression(new Source(token), {})
                     if (!exp || exp.parts.some(p => p.isOperator && !p.isAccess))
-                        throw new LangError(Errors.INVALID_IDENTIFIER, source.row, source.col, token)
+                        throw new LangParseError(Errors.INVALID_IDENTIFIER, token)
                     const assignment = new Assignment(exp, value)
                     return assignment
                 }
@@ -177,18 +177,18 @@ class Parser {
                     source.move()                  
                     continue
                 }
-                throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, expected)
+                throw new LangParseError(Errors.EXPECTED_SYMBOL, expected)
             }
 
             // end of the statement
             if (isStatementSeparator(c) || ')' === c || ']' === c || '}' === c || ',' === c) {
                 if ((')' === c || ']' === c || '}' === c) && ((!inGrouping && inGrouping !== c) || !parts.length)) {
-                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
+                    throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
                 }
                 // return the list of tokens and operators
                 if (parts.length) {
                     if (parts[parts.length - 1].isOperator && !parts[parts.length - 1].isAccess) {
-                        throw new LangError(Errors.UNEVEN_OPERATORS, source.row, source.col)
+                        throw new LangParseError(Errors.UNEVEN_OPERATORS)
                     }
                     return new Expression(parts)
                 }
@@ -199,7 +199,7 @@ class Parser {
             // function defition
             if (new RegExp(`^${RE_FUNCTION}`).test(source.remaining())) {
                 if (parts.length && !parts[parts.length - 1].isOperator) {
-                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
+                    throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
                 }
                 const fn = this.parseFunction(source)
                 parts.push(fn)
@@ -209,7 +209,7 @@ class Parser {
             // object definition
             if ('{' === c) {
                 if (!leftOperatorExpected()) {
-                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
+                    throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
                 }
                 source.move()
                 const attributes = this.readAttributes(source, ')')
@@ -228,7 +228,7 @@ class Parser {
                     openDefinitions.objects--
                     continue
                 }
-                throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), '}')
+                throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar(), '}')
             }
 
             // grouping or a function call
@@ -243,7 +243,7 @@ class Parser {
                         parts.push(call)
                         source.move()
                     } else {
-                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
+                        throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar(), ')')
                     }
                 } else {    // grouping
                     expected = ')'
@@ -268,14 +268,14 @@ class Parser {
                     const indexes = this.readList(source, ']')
                     consumeSpaces(source)
 
-                    if (!indexes.length) throw new LangError(Errors.ARRAY_INDEX_MISSING, source.row, source.col)
+                    if (!indexes.length) throw new LangParseError(Errors.ARRAY_INDEX_MISSING)
 
                     if (']' === source.currentChar()) {
-                        if (indexes.some(i => !i.isExpression || !i.parts.length)) throw new LangError(Errors.ARRAY_INDEX_NOT_NUMBER, source.row, source.col)
+                        if (indexes.some(i => !i.isExpression || !i.parts.length)) throw new LangParseError(Errors.ARRAY_INDEX_NOT_NUMBER)
                         source.move()
                         parts.push(new ArrayAccess(indexes))
                     } else {
-                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                        throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar(), ']')
                     }
                 } else {    // array definition
                     const elements = this.readList(source, ']')
@@ -286,7 +286,7 @@ class Parser {
                         source.move()
                         openDefinitions.arrays--
                     } else {
-                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                        throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar(), ']')
                     }
                 }
                 continue
@@ -314,7 +314,7 @@ class Parser {
             }
 
             if (parts.length && (!parts[parts.length - 1].isOperator || parts[parts.length - 1].isAccess)) 
-                throw new Error('Unexpected token') // TODO
+                throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar())
 
             const exp = this.parseMemberExpression(source)
             parts.push(exp)
@@ -353,7 +353,7 @@ class Parser {
                 if (isIdentifier(token)) {
                     return new VarReference(token)
                 }
-                throw new LangError(Errors.UNREFERENCED_VARIABLE, source.row, source.col, token)                
+                throw new LangParseError(Errors.UNREFERENCED_VARIABLE, token)                
             }
 
             if (isStringStarting(c)) {
@@ -398,12 +398,12 @@ class Parser {
 
                 const name = this.readIdentifier(source)
                 if (attributes[name]) {
-                    throw new LangError(Errors.ATTRIBUTE_ALREADY_EXISTS, source.row, source.col, name)
+                    throw new LangParseError(Errors.ATTRIBUTE_ALREADY_EXISTS, name)
                 }
                 consumeSpaces(source)
 
                 if (':' !== source.currentChar()) {
-                    throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, ':', source.currentChar())
+                    throw new LangParseError(Errors.EXPECTED_SYMBOL, ':', source.currentChar())
                 }
                 source.move()
 
@@ -428,7 +428,7 @@ class Parser {
         consumeSpaces(source)
 
         if ('(' !== source.currentChar()) {
-            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '(', source.currentChar())
+            throw new LangParseError(Errors.EXPECTED_SYMBOL, '(', source.currentChar())
         }       
         source.move()
         consumeSpaces(source) 
@@ -446,7 +446,7 @@ class Parser {
         }
 
         if (')' !== source.currentChar()) {
-            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, ')', source.currentChar())
+            throw new LangParseError(Errors.EXPECTED_SYMBOL, ')', source.currentChar())
         }
         source.move()
         return args
@@ -456,7 +456,7 @@ class Parser {
         consumeSpaces(source)
 
         if ('{' !== source.currentChar()) {
-            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '{', source.currentChar())
+            throw new LangParseError(Errors.EXPECTED_SYMBOL, '{', source.currentChar())
         }
 
         source.move()
@@ -474,7 +474,7 @@ class Parser {
         } 
 
         if ('}' !== source.currentChar()) {
-            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '}', source.currentChar())
+            throw new LangParseError(Errors.EXPECTED_SYMBOL, '}', source.currentChar())
         }
         source.move()
 
@@ -497,7 +497,7 @@ class Parser {
             }
             token += c
         }
-        throw new LangError(Errors.UNEXPECTED_END, source.row, source.col)
+        throw new LangParseError(Errors.UNEXPECTED_END)
     }
 
     readIdentifier(source) {
@@ -509,7 +509,7 @@ class Parser {
             token += c
         }
         if (token) return token
-        throw new LangError(Errors.EXPECTED_IDENTIFIER, source.row, source.col)
+        throw new LangParseError(Errors.EXPECTED_IDENTIFIER)
     }
 }
 
