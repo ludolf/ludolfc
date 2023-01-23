@@ -263,8 +263,7 @@ test('interpret expression function #3', () => {
 
 test('interpret expression function #4', () => {
   const ast = parser.parse('(){}((){})')
-  const result = interpret.execute(ast)
-  expect(result.type).toBe('VOID')
+  expect(() => interpret.execute(ast)).toThrow()  // argument mishmash
 })
 
 test('interpret expression function #5', () => {
@@ -283,8 +282,7 @@ test('interpret expression function #6', () => {
 
 test('interpret expression function #7', () => {
   const ast = parser.parse('(){}(1+2)')
-  const result = interpret.execute(ast)
-  expect(result.type).toBe('VOID')
+  expect(() => interpret.execute(ast)).toThrow()  // argument mishmash
 })
 
 test('interpret expression function #8', () => {
@@ -403,6 +401,62 @@ test('interpret expression function #24', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(6)
+})
+
+test('parser expression native function', () => {
+  const ast = parser.parse('1.plus(2)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('parser expression native function #2', () => {
+  const ast = parser.parse('1.plus(2+3)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
+test('parser expression native function #3', () => {
+  const ast = parser.parse('1.plus(2.plus(3))')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
+test('parser expression native function #4', () => {
+  const ast = parser.parse('1.plus(2.plus(3)+4)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('parser expression native function #5', () => {
+  const ast = parser.parse('1.plus(2.plus(3)+4)+5')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(15)
+})
+
+test('parser expression native function #6', () => {
+  const ast = parser.parse('6+1.plus(2.plus(3)+4)+5')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(21)
+})
+
+test('parser expression native function #7', () => {
+  const ast = parser.parse('4+2.mult(3)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('parser expression native function #8', () => {
+  const ast = parser.parse('2.mult(3)+1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(7)
 })
 
 test('interpret assignment number simplest', () => {

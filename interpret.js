@@ -55,6 +55,7 @@ class Interpret {
         if (!expression.parts) throw new Error('Empty expression') // TODO
         let parts = expression.parts
         let index
+        let assignApplied = false
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
 
@@ -70,6 +71,7 @@ class Interpret {
                 const a = this.executeExpressionPart(parts[index - 1])
                 const b = this.executeExpressionPart(parts[index + 1])
                 if (!a.type || !b.type) throw new Error('Wrong subjects') // TODO
+                if (a.type !== b.type) throw new Error('Unmatching subjects') // TODO
                 parts[index] = op.apply(a, b)
                 parts = removeElementAt(parts, index - 1, index + 1)
             } else 
@@ -79,12 +81,14 @@ class Interpret {
                 const indexes = op.indexes.map(i => this.executeExpressionPart(i))
                 parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
+                assignApplied = true
             } else 
             if (op.isObjectAccess) {
                 const o = this.executeExpressionPart(parts[index - 1])
                 if (!o.isObject) throw new Error('Not an object') // TODO
                 parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
+                assignApplied = true
             } else 
             if (op.isCall) {
                 const f = this.executeExpressionPart(parts[index - 1])
@@ -94,6 +98,9 @@ class Interpret {
             }
             else throw new Error('Operator unknown') // TODO
         }
+
+        if (assignNewValue && !assignApplied) throw new Error('Access operator not found') // TODO
+
         return this.executeExpressionPart(parts[0]) // parts are reduced to a single result
 
         function findNextOp() { // returns an index of the next part
@@ -121,8 +128,8 @@ class Interpret {
 
     executeExpressionPart(expressionPart) {
         if (expressionPart.isReference) {
-            if (!this.variables.has(expressionPart.varName)) throw new Error('Unreferenced variable') // TODO
-            return this.variables.get(expressionPart.varName)
+            if (!this.hasVariable(expressionPart.varName)) throw new Error('Unreferenced variable') // TODO
+            return this.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
             return this.executeExpression(expressionPart)
@@ -137,13 +144,18 @@ class Interpret {
             const obj = expressionPart.value
             for (let k of Object.keys(obj)) {
                 obj[k] = this.executeExpressionPart(obj[k])
+                if (obj[k].isObject) obj[k].parent = expressionPart
             }
         }
         return expressionPart
     }
 
     executeFunctionCall(f, params) {
-        if ((!params && f.args) || params.length !== f.args.length) new Error(Errors.FUNC_ARGUMENTS_MISHMASH) // TODO
+        if (f.native) {
+            return f.value(...params)
+        }
+
+        if ((!params && f.args) || params.length !== f.args.length) throw new Error(Errors.FUNC_ARGUMENTS_MISHMASH) // TODO
         // cache scoped variables
         const cache = {}
         let i = 0
@@ -198,6 +210,24 @@ class Interpret {
 
     executeIf(ifStm) {
         
+    }
+
+    hasVariable(name) {
+        if (this.variables.has(name)) return true
+        if (this.variables.has('$')) {
+            const self = this.variables.get('$')
+            if (self.hasAttribute(name)) return true
+        }
+        return false
+    }
+
+    getVariable(name) {
+        if (this.variables.has(name)) return this.variables.get(name)
+        if (this.variables.has('$')) {
+            const self = this.variables.get('$')
+            if (self.hasAttribute(name)) return self.attribute(name)
+        }
+        return false
     }
 
 }

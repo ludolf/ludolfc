@@ -108,7 +108,7 @@ class Parser {
             if (!expecting && isSpace(c) && !/^[0-9]+$/.test(token)) continue
 
             if (expecting && c !== expecting) {
-                throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, expecting, c)
+                throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, expecting, c)
             }
             if (expecting === '=' && c === expecting) {
                 inAssignment = true
@@ -128,7 +128,7 @@ class Parser {
             }
 
             if (':' === c && !openDefinitions.objects) {    // assignment starting
-                if (!(token.length)) throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                if (!(token.length)) throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
                 if (isKeyword(token)) throw new LangError(Errors.UNEXPEXTED_KEYWORD, source.row, source.col, c)
                 expecting = '='
             } else
@@ -177,13 +177,13 @@ class Parser {
                     source.move()                  
                     continue
                 }
-                throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, expected)
+                throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, expected)
             }
 
             // end of the statement
             if (isStatementSeparator(c) || ')' === c || ']' === c || '}' === c || ',' === c) {
                 if ((')' === c || ']' === c || '}' === c) && ((!inGrouping && inGrouping !== c) || !parts.length)) {
-                    throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
                 }
                 // return the list of tokens and operators
                 if (parts.length) {
@@ -199,7 +199,7 @@ class Parser {
             // function defition
             if (new RegExp(`^${RE_FUNCTION}`).test(source.remaining())) {
                 if (parts.length && !parts[parts.length - 1].isOperator) {
-                    throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
                 }
                 const fn = this.parseFunction(source)
                 parts.push(fn)
@@ -209,7 +209,7 @@ class Parser {
             // object definition
             if ('{' === c) {
                 if (!leftOperatorExpected()) {
-                    throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, c)
+                    throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, c)
                 }
                 source.move()
                 const attributes = this.readAttributes(source, ')')
@@ -228,7 +228,7 @@ class Parser {
                     openDefinitions.objects--
                     continue
                 }
-                throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), '}')
+                throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), '}')
             }
 
             // grouping or a function call
@@ -243,7 +243,7 @@ class Parser {
                         parts.push(call)
                         source.move()
                     } else {
-                        throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
+                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ')')
                     }
                 } else {    // grouping
                     expected = ')'
@@ -275,7 +275,7 @@ class Parser {
                         source.move()
                         parts.push(new ArrayAccess(indexes))
                     } else {
-                        throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
                     }
                 } else {    // array definition
                     const elements = this.readList(source, ']')
@@ -286,7 +286,7 @@ class Parser {
                         source.move()
                         openDefinitions.arrays--
                     } else {
-                        throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
+                        throw new LangError(Errors.UNEXPECTED_SYMBOL, source.row, source.col, source.currentChar(), ']')
                     }
                 }
                 continue
@@ -312,6 +312,9 @@ class Parser {
                     continue
                 }
             }
+
+            if (parts.length && (!parts[parts.length - 1].isOperator || parts[parts.length - 1].isAccess)) 
+                throw new Error('Unexpected token') // TODO
 
             const exp = this.parseMemberExpression(source)
             parts.push(exp)
@@ -400,7 +403,7 @@ class Parser {
                 consumeSpaces(source)
 
                 if (':' !== source.currentChar()) {
-                    throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, ':', source.currentChar())
+                    throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, ':', source.currentChar())
                 }
                 source.move()
 
@@ -425,7 +428,7 @@ class Parser {
         consumeSpaces(source)
 
         if ('(' !== source.currentChar()) {
-            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '(', source.currentChar())
+            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '(', source.currentChar())
         }       
         source.move()
         consumeSpaces(source) 
@@ -443,7 +446,7 @@ class Parser {
         }
 
         if (')' !== source.currentChar()) {
-            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, ')', source.currentChar())
+            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, ')', source.currentChar())
         }
         source.move()
         return args
@@ -453,7 +456,7 @@ class Parser {
         consumeSpaces(source)
 
         if ('{' !== source.currentChar()) {
-            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '{', source.currentChar())
+            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '{', source.currentChar())
         }
 
         source.move()
@@ -471,7 +474,7 @@ class Parser {
         } 
 
         if ('}' !== source.currentChar()) {
-            throw new LangError(Errors.EXPEXTED_SYMBOL, source.row, source.col, '}', source.currentChar())
+            throw new LangError(Errors.EXPECTED_SYMBOL, source.row, source.col, '}', source.currentChar())
         }
         source.move()
 
