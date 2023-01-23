@@ -241,6 +241,170 @@ test('parser expression object expression resolved #2', () => {
   expect(result.value).toBe(true)
 })
 
+test('interpret expression function', () => {
+  const ast = parser.parse('(){}()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret expression function #2', () => {
+  const ast = parser.parse('(x){x}(1)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #3', () => {
+  const ast = parser.parse('(x,y){x+y}(1,2)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #4', () => {
+  const ast = parser.parse('(){}((){})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret expression function #5', () => {
+  const ast = parser.parse('(x){x}((){1}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #6', () => {
+  const ast = parser.parse('(x){x}((){1}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #7', () => {
+  const ast = parser.parse('(){}(1+2)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret expression function #8', () => {
+  const ast = parser.parse('(x){x}(1+2)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #9', () => {
+  const ast = parser.parse('(x){x}((){1}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #10', () => {
+  const ast = parser.parse('(x){x}(1+(){2}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #11', () => {
+  const ast = parser.parse('(x){x}((){2}()+3)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(5)
+})
+
+test('interpret expression function #12', () => {
+  const ast = parser.parse('(x){x}(1+(){2}()+3)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
+test('interpret expression function #13', () => {
+  const ast = parser.parse('(){(){}()}()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret expression function #14', () => {
+  const ast = parser.parse('(){(){1}()}()+(){(){2}()}()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #15', () => {
+  const ast = parser.parse('(){(){(){(){1}()}()}()}()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #16', () => {
+  const ast = parser.parse('1+(){2+(){3+(){(4+5)}()+6}()+7}()+8')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(36)
+})
+
+test('interpret expression function #17', () => {
+  const ast = parser.parse('(x){x}((1))')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression function #18', () => {
+  const ast = parser.parse('(x){(y){(){x+y}()}(x)}(1)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret expression function #19', () => {
+  const ast = parser.parse('(x){(y){(){x+y}()}(2)}(1)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #20', () => {
+  const ast = parser.parse('4+(x){(y){(){x+y}()}(2)}(1)+5')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(12)
+})
+
+test('interpret expression function #21', () => {
+  const ast = parser.parse('(x){(){1}()+x+(){2}()}((){3}()+(){4}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret expression function #22', () => {
+  const ast = parser.parse('(f,g){f()+g()}((){1},(){2})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret expression function #23', () => {
+  const ast = parser.parse('(f,g){f(1)+g(2)}((x){3+x},(x){x+4})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret expression function #24', () => {
+  const ast = parser.parse('(x,y){x+y}((){1}(),(){2}()+(){3}())')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
 test('interpret assignment number simplest', () => {
   const ast = parser.parse('a := 1\na')
   const result = interpret.execute(ast)
@@ -267,6 +431,13 @@ test('interpret assignment with object access #2', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(2)
+})
+
+test('interpret assignment with object access #3', () => {
+  const ast = parser.parse('o := {a:{b:1},b:3}\no.a.b := 2\no.b')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
 })
 
 test('interpret assignment with array access #3', () => {
@@ -297,7 +468,20 @@ test('interpret assignment with array access #6', () => {
   expect(result.value).toBe(8)
 })
 
-test('interpret assignment fuction def body', () => {
+test('interpret assignment with array access #7', () => {
+  const ast = parser.parse('a := [[1],[2,3]]\na[1][0] := 4\na[0,0]+a[1,0]+a[1,1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(8)
+})
+
+test('interpret assignment function def body', () => {
+  const ast = parser.parse('f := (){}\nf()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret assignment function def body #2', () => {
   const ast = parser.parse('f := (a,b){x := a + b\nx + 1}\nf(1,2)')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')

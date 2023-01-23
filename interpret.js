@@ -36,12 +36,11 @@ class Interpret {
     }
 
     executeBlock(block) {
-        let result = null
+        let result
         for (let stm of block.statements) {
-            const r = this.executeStatement(stm)
-            if (r) result = r
+            result = this.executeStatement(stm)
         }
-        return result
+        return result ? result : new LangVoid()
     }
 
     executeStatement(stm) {
@@ -49,7 +48,7 @@ class Interpret {
                stm.isAssignment ? this.executeAssignemt(stm) :
                stm.isWhile ? this.executeWhile(stm) :
                stm.isIf ? this.executeIf(stm) : 
-               null
+               stm
     }
 
     executeExpression(expression, assignNewValue = null) {
@@ -59,7 +58,7 @@ class Interpret {
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
 
-            if (assignNewValue && !op.isAccess) throw new Error('Access operator expected') // TODO
+            if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new Error('Access operator expected') // TODO
 
             if (op.isUni) {
                 const a = this.executeExpressionPart(parts[index + 1])
@@ -88,8 +87,10 @@ class Interpret {
                 parts = removeElementAt(parts, index - 1)
             } else 
             if (op.isCall) {
-                // TODO
-                throw new Error('func call not implemented yet')
+                const f = this.executeExpressionPart(parts[index - 1])
+                const params = op.params.map(p => this.executeExpressionPart(p))
+                parts[index] = this.executeFunctionCall(f, params)
+                parts = removeElementAt(parts, index - 1)
             }
             else throw new Error('Operator unknown') // TODO
         }
@@ -139,6 +140,44 @@ class Interpret {
             }
         }
         return expressionPart
+    }
+
+    executeFunctionCall(f, params) {
+        if ((!params && f.args) || params.length !== f.args.length) new Error(Errors.FUNC_ARGUMENTS_MISHMASH) // TODO
+        // cache scoped variables
+        const cache = {}
+        let i = 0
+        for (let arg of f.args) {
+            if (this.variables.has(arg)) {
+                cache[arg] = this.variables.get(arg)
+            }
+            this.variables.set(arg, params[i++])
+        }
+        if (f.parent) {
+            // cache "this" object into variable $
+            if (this.variables.has('$')) {
+                cache['$'] = this.variables.get('$')
+            }
+            this.variables.set('$', f.parent)
+        }
+        
+        try {
+            const result = this.executeBlock(f.value)
+            return result
+
+        } finally {  // clean up variables
+            if (cache['$'])
+                this.variables.set('$', cache['$'])
+            else 
+                this.variables.delete('$')
+
+            for (let arg of f.args) {
+                if (cache[arg]) 
+                    this.variables.set(arg, cache[arg])
+                else
+                    this.variables.delete(arg)
+            }
+        }
     }
 
     executeAssignemt(assignment) {

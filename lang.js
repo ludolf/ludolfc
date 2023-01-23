@@ -313,44 +313,6 @@ class LangFunction extends LangObject {
         super(body, Types.FUNCTION)
         this.args = args
     }
-    call(interpret, ...params) {
-        if ((!params && this.args) || params.length !== this.args.length) {
-            throw new LangError(Errors.FUNC_ARGUMENTS_MISHMASH, interpret.source.row, interpret.source.col)
-        }
-        // cache scoped variables
-        const cache = {}
-        let i = 0
-        for (let arg of this.args) {
-            if (interpret.variables.has(arg)) {
-                cache[arg] = interpret.variables.get(arg)
-            }
-            interpret.variables.set(arg, params[i++])
-        }
-        if (this.parent) {
-            // cache "this" object into variable $
-            if (interpret.variables.has('$')) {
-                cache['$'] = interpret.variables.get('$')
-            }
-            interpret.variables.set('$', this.parent)
-        }
-        
-        try {
-            return interpret._execProgram(new Source(this.value))
-
-        } finally {  // clean up variables
-            if (cache['$'])
-                interpret.variables.set('$', cache['$'])
-            else 
-                interpret.variables.delete('$')
-
-            for (let arg of this.args) {
-                if (cache[arg]) 
-                    interpret.variables.set(arg, cache[arg])
-                else
-                    interpret.variables.delete(arg)
-            }
-        }
-    }
 }
 
 class LangNativeFunction extends LangObject {

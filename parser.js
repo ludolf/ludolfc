@@ -198,7 +198,7 @@ class Parser {
 
             // function defition
             if (new RegExp(`^${RE_FUNCTION}`).test(source.remaining())) {
-                if (parts.length) {
+                if (parts.length && !parts[parts.length - 1].isOperator) {
                     throw new LangError(Errors.UNEXPEXTED_SYMBOL, source.row, source.col, c)
                 }
                 const fn = this.parseFunction(source)
