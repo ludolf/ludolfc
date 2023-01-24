@@ -109,6 +109,18 @@ test('expression error wrong value', () => {
   expect(() => ludolfC.execute('1 2')).toThrow()
 })
 
+test('expression error wrong value #2', () => {
+  expect(() => ludolfC.execute('a:=1\na 1')).toThrow()
+})
+
+test('expression error wrong value #3', () => {
+  expect(() => ludolfC.execute('a:=1\n1 a')).toThrow()
+})
+
+test('expression error wrong value #4', () => {
+  expect(() => ludolfC.execute('a:=1\b:=2\na b')).toThrow()
+})
+
 test('expression in the middle', () => {
   expect(ludolfC.execute('a := 1\n(123 + 1)\n\n5 + 2').value).toBe(7)
 })

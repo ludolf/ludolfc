@@ -1,6 +1,8 @@
 const { 
-    Keywords,
     Errors,
+    Keywords,
+    WhileKeywords,
+    IfKeywords,
     Block,
     Assignment,
     While,
@@ -105,7 +107,7 @@ class Parser {
             }
             
             // ignore spaces (except space between numbers)
-            if (!expecting && isSpace(c) && !/^[0-9]+$/.test(token)) continue
+            if (!expecting && isSpace(c) && isSpace(token.charAt(token.length - 1))) continue
 
             if (expecting && c !== expecting) {
                 throw new LangParseError(Errors.EXPECTED_SYMBOL, expecting, c)
@@ -127,13 +129,31 @@ class Parser {
                 break
             }
 
+            // while
+            if (isWhileDef(source.remaining())) {
+                if (token.length) {
+                    throw new LangParseError(Errors.UNEXPECTED_SYMBOL, token)
+                }
+                consumeUntil(source, '\\s')
+                const def = this.parseWhile(source)
+                consumeSpaces(source, true)
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END)
+                return def
+            }
+
+            // if
+            if (isIfDef(source.remaining())) {
+                throw new Error('not implemented yet') // TODO
+            }
+
             if (':' === c && !openDefinitions.objects) {    // assignment starting
-                if (!(token.length)) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
-                if (isKeyword(token)) throw new LangParseError(Errors.UNEXPEXTED_KEYWORD, c)
+                if (!(token.trim().length)) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
+                if (isKeyword(token.trim())) throw new LangParseError(Errors.UNEXPEXTED_KEYWORD, c)
                 expecting = '='
             } else
             if (inAssignment) {  // variable assignment                
                 const value = this.parseExpression(source, openDefinitions)
+                token = token.trim()
                 if (isIdentifier(token)) {
                     const variable = new Variable(token)
                     const assignment = new Assignment(variable, value)
@@ -197,7 +217,7 @@ class Parser {
             }
 
             // function defition
-            if (new RegExp(`^${RE_FUNCTION}`).test(source.remaining())) {
+            if (isFunctionDef(source.remaining())) {
                 if (parts.length && !parts[parts.length - 1].isOperator) {
                     throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
                 }
@@ -418,9 +438,16 @@ class Parser {
         }
     }
 
+    parseWhile(source) {
+        const condCode = this.readUntilBodyOpens(source)
+        const cond = this.parseExpression(new Source(condCode), {}, null)
+        const body = this.parseBody(source)
+        return new While(cond, body)
+    }
+
     parseFunction(source) {
         const args = this.readArguments(source)
-        const body = this.parseFuncBody(source)
+        const body = this.parseBody(source)
         return new LangFunction(body, args)
     }
 
@@ -452,7 +479,7 @@ class Parser {
         return args
     }
 
-    parseFuncBody(source) {
+    parseBody(source) {
         consumeSpaces(source)
 
         if ('{' !== source.currentChar()) {
@@ -511,10 +538,42 @@ class Parser {
         if (token) return token
         throw new LangParseError(Errors.EXPECTED_IDENTIFIER)
     }
+
+    readUntilBodyOpens(source) {
+        let curlies = 0
+        let quotations = 0
+        let token = ''
+        for (; !source.finished(); source.move()) {
+            const c = source.currentChar()
+            if (isStringStarting(c)) {
+                token += this.readString(source, c)
+                continue
+            }
+            if ('(' === c) quotations++
+            else
+            if (')' === c) quotations--
+            else
+            if ('{' === c) {
+                if (!curlies && !quotations) break
+                curlies++
+            } else 
+            if ('}' === c) {
+                curlies--
+                if (curlies < 0) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, c)
+            }
+            token += c
+        }
+        if (token) return token
+    }
 }
 
-function consumeSpaces(source) {
-    while (!source.finished() && /\s/.test(source.currentChar())) source.move()
+function consumeSpaces(source, stopAtNewLine = false) {
+    while (!source.finished() && /\s/.test(source.currentChar()) && (!stopAtNewLine || '\n' !== source.currentChar())) source.move()
+}
+
+function consumeUntil(source, untilChar) {
+    const re = new RegExp(untilChar)
+    while (!source.finished() && !re.test(source.currentChar())) source.move()
 }
 
 function isNumeric(str) {
@@ -523,7 +582,7 @@ function isNumeric(str) {
 
 function isKeyword(str) {
     str = str.toLowerCase()
-    return Object.values(Keywords).some(kw => kw.includes(str))
+    return Object.values(Keywords).some(k => k.includes(str)) ||  WhileKeywords.includes(str) || IfKeywords.includes(str)
 }
 
 function isSpace(c) {
@@ -551,6 +610,18 @@ function isStringEnding(c, quoting) {
 
 function isIdentifier(token) {
     return new RegExp(`^${RE_IDENTIFIER}$`).test(token)
+}
+
+function isFunctionDef(remaining) {
+    return new RegExp(`^${RE_FUNCTION}`).test(remaining)
+}
+
+function isWhileDef(remaining) {
+    return WhileKeywords.some(k => new RegExp(`^${k}\\s(.*)\\s{`).test(remaining)) 
+}
+
+function isIfDef(remaining) {
+    return IfKeywords.some(k => new RegExp(`^${k}\\s(.*)\\s{`).test(remaining)) 
 }
 
 module.exports = Parser

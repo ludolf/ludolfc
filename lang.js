@@ -5,8 +5,9 @@ const Keywords = {
     ELSE: ['else', 'jinak', 'sonst'],
     WHILE: ['while', 'dokud', 'soweit'],
 }
-
-const ArraySize = ['size', 'velikost', 'größe']
+const SizeKeywords = ['size', 'velikost', 'größe']
+const WhileKeywords = ['while', 'dokud', 'solange']
+const IfKeywords = ['if', 'pokud', 'falls']
 
 const Errors = {
     INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
@@ -19,6 +20,7 @@ const Errors = {
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
     EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
+    EXPEXTED_STATEMENT_END: 'EXPEXTED_STATEMENT_END',
     ATTRIBUTE_NOT_EXISTS: 'ATTRIBUTE_NOT_EXISTS',
     ARRAY_INDEX_NOT_NUMBER: 'ARRAY_INDEX_NOT_NUMBER',
     ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
@@ -36,6 +38,8 @@ const Errors = {
     WRONG_ASSIGNMENT: 'WRONG_ASSIGNMENT',
     WRONG_ASSIGNEE_TYPE: 'WRONG_ASSIGNEE_TYPE',
     READONLY_ATTRIBUTE: 'READONLY_ATTRIBUTE',
+    WRONG_CONDITION: 'WRONG_CONDITION',
+    WRONG_CONDITION_VALUE: 'WRONG_CONDITION_VALUE',
 }
 
 const Types = {
@@ -317,7 +321,7 @@ class LangArray extends LangValueObject {
 
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
 
-        for (let s of ArraySize) this[s] = this.value.length
+        for (let s of SizeKeywords) this[s] = this.value.length
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
@@ -329,14 +333,14 @@ class LangArray extends LangValueObject {
         }, this)
     }
     attribute(name, newValue) {
-        if (ArraySize.includes(name.toLowerCase())) {
+        if (SizeKeywords.includes(name.toLowerCase())) {
             if (newValue) throw new LangError(Errors.READONLY_ATTRIBUTE)
             return new LangNumber(this.value.length)
         }
         return super.attribute(name, newValue)
     }
     hasAttribute(name) {
-        return ArraySize.includes(name.toLowerCase()) || super.attribute(name, newValue)
+        return SizeKeywords.includes(name.toLowerCase()) || super.attribute(name, newValue)
     }
 }
 
@@ -370,7 +374,9 @@ module.exports = {
     Keywords,
     Errors,
     Types,
-    ArraySize,
+    SizeKeywords,
+    WhileKeywords,
+    IfKeywords,
     Block,
     Assignment,
     While,

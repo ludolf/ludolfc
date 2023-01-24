@@ -555,3 +555,109 @@ test('interpret statement multiple #2', () => {
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(3)
 })
+
+
+test('interpret statement while', () => {
+  const ast = parser.parse('while false {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #2', () => {
+  const ast = parser.parse('while (false) {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #3', () => {
+  const ast = parser.parse('while 1 > 2 {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #4', () => {
+  const ast = parser.parse('while ((){false}()) {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #5', () => {
+  const ast = parser.parse('while ((){true}() & false) {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #6', () => {
+  const ast = parser.parse('while false {1}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #7', () => {
+  const ast = parser.parse('while false {1}\nwhile false {2}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('VOID')
+})
+
+test('interpret statement while #8', () => {
+  const ast = parser.parse('a := 0\nwhile a < 10 { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret statement while #9', () => {
+  const ast = parser.parse('a := 0\nb := 0\nwhile a < 10 { b := b + 1\na := a + 2 }\nb')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(5)
+})
+
+test('interpret statement while #10', () => {
+  const ast = parser.parse('a := 0\nb := 0\nwhile a < 10 { b := b + 1\na := a + 2 }\nb + a')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(15)
+})
+
+test('interpret statement while #11', () => {
+  const ast = parser.parse('a := 0\nb := 0\nwhile a < 10 { b := b + 1\na := a + 2 }\n\nwhile b < 10 { b := b + 1\na := a + 2 }\nb + a')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(30)
+})
+
+test('interpret statement while #12', () => {
+  const ast = parser.parse('a := 0\nwhile ((){a < 10}()) { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret statement while #13', () => {
+  const ast = parser.parse('a := 0\nwhile ((){(){a < 10}()}()) { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret statement while #14', () => {
+  const ast = parser.parse('a := 0\nwhile a < 10 | a < 30 { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(30)
+})
+
+test('interpret statement while #15', () => {
+  const ast = parser.parse('a := 0\nwhile a < 10 & a < 30 { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret statement while #16', () => {
+  const ast = parser.parse('a := 0\nwhile ((a < 10)) { a := a + 1 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})

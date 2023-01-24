@@ -1,26 +1,7 @@
 const { 
-    Errors,
     Types,
-    ArraySize,
-    Block,
-    Assignment,
-    While,
-    If,
-    Expression,
-    Variable,
-    UniOperator,
-    BiOperator,
-    ArrayAccess,
-    ObjectAccess,
-    FunctionCall,
-    VarReference,
+    Errors,
     LangInterpretError,
-    LangObject,
-    LangNumber,
-    LangString,
-    LangBoolean,
-    LangArray,
-    LangFunction,
     LangVoid } = require('./lang')
 
 const Parser = require('./parser')
@@ -53,7 +34,7 @@ class Interpret {
 
     executeExpression(expression, assignNewValue = null) {
         if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION)
-        let parts = expression.parts
+        let parts = [...expression.parts]
         let index
         let assignApplied = false
         while ((index = findNextOp()) > -1) {
@@ -197,7 +178,13 @@ class Interpret {
     }
 
     executeWhile(whileStm) {
-
+        if (!whileStm.condition || !whileStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION)
+        while (true) {
+            const cond = this.executeExpressionPart(whileStm.condition)
+            if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE)
+            if (cond.value) this.executeBlock(whileStm.body)
+            else break
+        } 
     }
 
     executeIf(ifStm) {
