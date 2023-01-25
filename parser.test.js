@@ -1,4 +1,3 @@
-const { Types } = require('./lang')
 const Parser = require('./parser')
 const parser = new Parser()
 
@@ -1006,7 +1005,7 @@ test('parser expression function', () => {
   expect(ast.statements[0].parts[0].type).toBe('FUNCTION')
   expect(ast.statements[0].parts[0].args).toHaveLength(0)
   expect(ast.statements[0].parts[0].value.statements).toHaveLength(1)
-  expect(ast.statements[0].parts[0].value.statements[0].type).toBe(Types.VOID)
+  expect(ast.statements[0].parts[0].value.statements[0].type).toBe('VOID')
   expect(ast.statements[0].parts[1].isOperator).toBe(true)
   expect(ast.statements[0].parts[1].isAccess).toBe(true)
   expect(ast.statements[0].parts[1].isCall).toBe(true)
@@ -1017,7 +1016,7 @@ test('parser expression function', () => {
   expect(ast.statements[0].parts[1].params[0].parts[0].type).toBe('FUNCTION')
   expect(ast.statements[0].parts[1].params[0].parts[0].args).toHaveLength(0)
   expect(ast.statements[0].parts[1].params[0].parts[0].value.statements).toHaveLength(1)
-  expect(ast.statements[0].parts[1].params[0].parts[0].value.statements[0].type).toBe(Types.VOID)
+  expect(ast.statements[0].parts[1].params[0].parts[0].value.statements[0].type).toBe('VOID')
 })
 
 test('parser expression function #2', () => {
@@ -1586,7 +1585,7 @@ test('parser statement while #7', () => {
   expect(ast.statements[1].body.statements[0].parts[0].value).toBe(2)
 })
 
-test('interpret statement while #8', () => {
+test('parser statement while #8', () => {
   const ast = parser.parse('a := 0\nb := 0\nwhile a < 10 { b := b + 1\na := a + 2 }\nb')
   expect(ast.statements).toHaveLength(4)
   expect(ast.statements[0].isAssignment).toBe(true)
@@ -1604,4 +1603,63 @@ test('interpret statement while #8', () => {
   expect(ast.statements[2].body.statements[0].isAssignment).toBe(true)
   expect(ast.statements[2].body.statements[1].isAssignment).toBe(true)
   expect(ast.statements[3].isExpression).toBe(true)
+})
+
+test('parser comment', () => {  // comment must be in the beginning of a statement
+  const ast = parser.parse('//a')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #1', () => {
+  const ast = parser.parse('//a := [1]')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #2', () => {
+  const ast = parser.parse('// !@#$%^&*()')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #3', () => {
+  const ast = parser.parse('// !@#$%^&*()')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #4', () => {
+  const ast = parser.parse('//')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #5', () => {
+  const ast = parser.parse('////')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #6', () => {
+  const ast = parser.parse('// //')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #7', () => {
+  const ast = parser.parse('  // //')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #8', () => {
+  const ast = parser.parse('1\n//x')
+  expect(ast.statements).toHaveLength(1)
+  expect(ast.statements[0].isExpression).toBe(true)
+  expect(ast.statements[0].parts).toHaveLength(1)
+  expect(ast.statements[0].parts[0].type).toBe('NUMBER')
+  expect(ast.statements[0].parts[0].value).toBe(1)
+})
+
+test('parser comment #9', () => {
+  const ast = parser.parse('//    _if1 := _if1 - 1')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parser comment #10', () => {
+  const ast = parser.parse('//if _if1 > 3 {\n//    _if1 := _if1 - 1')
+  expect(ast.statements).toHaveLength(0)
 })

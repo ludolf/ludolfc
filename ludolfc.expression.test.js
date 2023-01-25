@@ -173,6 +173,10 @@ test('expression func call double params spaces', () => {
   expect(ludolfC.execute('    1 .   sum  (  2  .  minus ( 1   )   ,( 3  .plus ( 1)  )).minus   (1)+1').value).toBe(6)
 })
 
+test('expression func call quotings', () => {
+  expect(ludolfC.execute('o:=8\n(o){(o)}((o))').value).toBe(8)
+})
+
 test('expression array definition one dimension', () => {
   expect(ludolfC.execute('[1,2]').value[1].value).toBe(2)
 })

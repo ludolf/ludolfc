@@ -95,6 +95,12 @@ class Parser {
 
         for (; !source.finished(); source.move()) {
             const c = source.currentChar()
+
+            // comment
+            if (isComment(source.remaining())) {
+                consumeUntil(source, '\\n')
+                continue
+            }
             
             // consume the whole string to prevent space-ignoring
             if (!inAssignment && isStringStarting(c)) {
@@ -415,6 +421,7 @@ class Parser {
                     source.move()
                 }
                 first = false
+                consumeSpaces(source)
 
                 const name = this.readIdentifier(source)
                 if (attributes[name]) {
@@ -622,6 +629,10 @@ function isWhileDef(remaining) {
 
 function isIfDef(remaining) {
     return IfKeywords.some(k => new RegExp(`^${k}\\s(.*)\\s{`).test(remaining)) 
+}
+
+function isComment(remaining) {
+    return new RegExp('^//').test(remaining)
 }
 
 module.exports = Parser

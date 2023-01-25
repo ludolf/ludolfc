@@ -325,10 +325,12 @@ class LangArray extends LangValueObject {
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
-            const v = a.value[Math.ceil(c.value)]
+            const index = Math.ceil(c.value)
+            if (index >= a.value.length) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS)
+            const v = a.value[index]
             // set the value for the last element
             if (newValue && i === indexes.length - 1)
-                a.value[Math.ceil(c.value)] = newValue            
+                a.value[index] = newValue            
             return v
         }, this)
     }

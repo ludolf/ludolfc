@@ -109,7 +109,7 @@ class Interpret {
 
     executeExpressionPart(expressionPart) {
         if (expressionPart.isReference) {
-            if (!this.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE)
+            if (!this.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.varName)
             return this.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
