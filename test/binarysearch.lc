@@ -1,0 +1,19 @@
+binarySearch := (arr, l, r, x){
+    result := -1
+    if r >= l {
+        mid := l + Math.floor((r - l) / 2) 
+        if arr[mid] != x {
+            if (arr[mid] > x) {
+                result := binarySearch(arr, l, mid - 1, x)
+            } else {
+                result := binarySearch(arr, mid + 1, r, x);
+            }
+        } else {
+            result := mid
+        }        
+    }
+    result
+}
+
+arr := [ 2, 3, 4, 10, 40 ]
+_10 := binarySearch(arr, 0, arr.size - 1, 10)

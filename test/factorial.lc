@@ -1,0 +1,30 @@
+factorial1 := (num) {
+    result := 0
+    if num <= 0 {
+        result := 1
+    } else {
+        result := num * factorial1(num - 1)
+    }
+    result
+}
+
+_1_0 := factorial1(0)
+_1_1 := factorial1(1)
+_1_5 := factorial1(5)
+
+factorial2 := (num) {
+    result := num
+    if num = 0 | num = 1 {
+        result := 1
+    } else {
+        while num > 1 { 
+            num := num - 1
+            result := result * num
+        }
+    }
+    result
+}
+
+_2_0 := factorial2(0)
+_2_1 := factorial2(1)
+_2_5 := factorial2(5)

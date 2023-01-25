@@ -206,35 +206,35 @@ test('interpret expression array complex access', () => {
   expect(result.value).toBe(9)
 })
 
-test('parser expression array expression', () => {
+test('interpret r expression array expression', () => {
   const ast = parser.parse('[1+2][0]')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(3)
 })
 
-test('parser expression array expression resolved', () => {
+test('interpret r expression array expression resolved', () => {
   const ast = parser.parse('a:=1\nb:=[a]\na:=2\nb[0]')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(1)
 })
 
-test('parser expression array expression resolved #2', () => {
+test('interpret r expression array expression resolved #2', () => {
   const ast = parser.parse('a:=1\nf:=(){a:=2}\nb:=[f()]\na=2')
   const result = interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(true)
 })
 
-test('parser expression array expression resolved', () => {
+test('interpret r expression array expression resolved', () => {
   const ast = parser.parse('a:=1\nb:={a:a}\na:=2\nb.a')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(1)
 })
 
-test('parser expression object expression resolved #2', () => {
+test('interpret r expression object expression resolved #2', () => {
   const ast = parser.parse('a:=1\nf:=(){a:=2}\nb:={a:f()}\na=2')
   const result = interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
@@ -403,56 +403,56 @@ test('interpret expression function #24', () => {
   expect(result.value).toBe(6)
 })
 
-test('parser expression native function', () => {
+test('interpret r expression native function', () => {
   const ast = parser.parse('1.plus(2)')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(3)
 })
 
-test('parser expression native function #2', () => {
+test('interpret r expression native function #2', () => {
   const ast = parser.parse('1.plus(2+3)')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(6)
 })
 
-test('parser expression native function #3', () => {
+test('interpret r expression native function #3', () => {
   const ast = parser.parse('1.plus(2.plus(3))')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(6)
 })
 
-test('parser expression native function #4', () => {
+test('interpret r expression native function #4', () => {
   const ast = parser.parse('1.plus(2.plus(3)+4)')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(10)
 })
 
-test('parser expression native function #5', () => {
+test('interpret r expression native function #5', () => {
   const ast = parser.parse('1.plus(2.plus(3)+4)+5')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(15)
 })
 
-test('parser expression native function #6', () => {
+test('interpret r expression native function #6', () => {
   const ast = parser.parse('6+1.plus(2.plus(3)+4)+5')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(21)
 })
 
-test('parser expression native function #7', () => {
+test('interpret r expression native function #7', () => {
   const ast = parser.parse('4+2.mult(3)')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(10)
 })
 
-test('parser expression native function #8', () => {
+test('interpret r expression native function #8', () => {
   const ast = parser.parse('2.mult(3)+1')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
@@ -660,4 +660,186 @@ test('interpret statement while #16', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(10)
+})
+
+test('interpret statement while #17', () => {
+  const ast = parser.parse('x:=0\ni:=0\nwhile i < 10 { j:=0\nwhile j < 10 { j:=j+1\nx:=x+1 }\ni:=i+1 }\nx')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(100)
+})
+
+test('interpret if', () => {
+  const ast = parser.parse('a:=1\nif true { a:=2 }\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if else', () => {
+  const ast = parser.parse('a:=1\nif true {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if else #2', () => {
+  const ast = parser.parse('a:=1\nif false {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if else #3', () => {
+  const ast = parser.parse('x:=0\na:=1\nb:=2\nif true {x:=a} else {x:=b}\nx')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret if else #4', () => {
+  const ast = parser.parse('a:=1\nif 2 >= 1 {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if else #5', () => {
+  const ast = parser.parse('a:=0\nif true {a:=1}\nif false {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if else #6', () => {
+  const ast = parser.parse('a:=0\nif a < 1 {a:=1}\nif a >= 1 {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if else #7', () => {
+  const ast = parser.parse('a := 0\nb := 0\nif a < 10 { b := b + 1\na := a + 2 }\nb+a')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if else #8', () => {
+  const ast = parser.parse('a:=0\nif ((){true}()) {a:=1}\nelse {a:=2}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret if else #9', () => {
+  const ast = parser.parse('a:=0\nif ((x){1=1}(1)) {a:=1}\nelse {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret if else #10', () => {
+  const ast = parser.parse('a:=0\nif (1<=1) {a:=1}\nelse {a:=2}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret function recursion', () => {
+  const ast = parser.parse('f := (){ a:=a+1\nif a < 10 { f() }}\na:=1\nf()\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret function double call', () => {
+  const ast = parser.parse('inc:=(){a:=a+1}\nf:=(){while a < 10 { inc() }}\na:=1\nf()\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret function double call #2', () => {
+  const ast = parser.parse('inc:=(){a:=a+1}\nf:=(){while a < 10 { if a < 22 {inc()} }}\na:=1\nf()\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(10)
+})
+
+test('interpret object self', () => {
+  const ast = parser.parse('a:=0\no:={a:1,f:(){$.a:=2\na:=3}}\no.f()\no.a')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret object self #2', () => {
+  const ast = parser.parse('a:=0\no:={a:1,f:(){$.a:=2\na:=3}}\no.f()\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret string concat', () => {
+  const ast = parser.parse('"" + ""')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string concat #2', () => {
+  const ast = parser.parse('"a" + ""')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a')
+})
+
+test('interpret string concat #3', () => {
+  const ast = parser.parse('"a" + "b"')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('ab')
+})
+
+test('interpret string concat #4', () => {
+  const ast = parser.parse('"a" + "bc" + "" + "d"')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('abcd')
+})
+
+test('interpret array concat', () => {
+  const ast = parser.parse('[] + []')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('ARRAY')
+  expect(result.value).toHaveLength(0)
+})
+
+test('interpret array concat #2', () => {
+  const ast = parser.parse('[1] + []')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('ARRAY')
+  expect(result.value).toHaveLength(1)
+  expect(result.value[0].value).toBe(1)
+})
+
+test('interpret array concat #3', () => {
+  const ast = parser.parse('[1] + [2]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('ARRAY')
+  expect(result.value).toHaveLength(2)
+  expect(result.value[0].value).toBe(1)
+  expect(result.value[1].value).toBe(2)
+})
+
+test('interpret array concat #4', () => {
+  const ast = parser.parse('[1] + [2,3] + [] + [4]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('ARRAY')
+  expect(result.value).toHaveLength(4)
+  expect(result.value[0].value).toBe(1)
+  expect(result.value[1].value).toBe(2)
+  expect(result.value[2].value).toBe(3)
+  expect(result.value[3].value).toBe(4)
 })

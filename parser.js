@@ -3,6 +3,7 @@ const {
     Keywords,
     WhileKeywords,
     IfKeywords,
+    ElseKeywords,
     Block,
     Assignment,
     While,
@@ -140,6 +141,7 @@ class Parser {
                 if (token.length) {
                     throw new LangParseError(Errors.UNEXPECTED_SYMBOL, token)
                 }
+                consumeSpaces(source)
                 consumeUntil(source, '\\s')
                 const def = this.parseWhile(source)
                 consumeSpaces(source, true)
@@ -149,7 +151,31 @@ class Parser {
 
             // if
             if (isIfDef(source.remaining())) {
-                throw new Error('not implemented yet') // TODO
+                if (token.length) {
+                    throw new LangParseError(Errors.UNEXPECTED_SYMBOL, token)
+                }
+                consumeSpaces(source)
+                consumeUntil(source, '\\s')
+                const def = this.parseIf(source)
+                consumeSpaces(source, true)
+                if (isElseDef(source.remaining())) {
+                    consumeSpaces(source)
+                    consumeUntil(source, '\\s')
+                    def.elseBody = this.parseBody(source)
+                    consumeSpaces(source, true)
+                }
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END)
+                if (!def.elseBody) {
+                    consumeSpaces(source)
+                    if (isElseDef(source.remaining())) {
+                        consumeSpaces(source)
+                        consumeUntil(source, '\\s')
+                        def.elseBody = this.parseBody(source)
+                        consumeSpaces(source, true)
+                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END)
+                    }
+                }
+                return def
             }
 
             if (':' === c && !openDefinitions.objects) {    // assignment starting
@@ -376,7 +402,7 @@ class Parser {
                 if (isNumeric(token)) {
                     return new LangNumber(token.includes('.') ? parseFloat(token) : parseInt(token))
                 } 
-                if (isIdentifier(token)) {
+                if (isIdentifier(token) || '$' === token) {
                     return new VarReference(token)
                 }
                 throw new LangParseError(Errors.UNREFERENCED_VARIABLE, token)                
@@ -450,6 +476,13 @@ class Parser {
         const cond = this.parseExpression(new Source(condCode), {}, null)
         const body = this.parseBody(source)
         return new While(cond, body)
+    }
+
+    parseIf(source) {
+        const condCode = this.readUntilBodyOpens(source)
+        const cond = this.parseExpression(new Source(condCode), {}, null)
+        const body = this.parseBody(source)
+        return new If(cond, body)
     }
 
     parseFunction(source) {
@@ -624,11 +657,15 @@ function isFunctionDef(remaining) {
 }
 
 function isWhileDef(remaining) {
-    return WhileKeywords.some(k => new RegExp(`^${k}\\s(.*)\\s{`).test(remaining)) 
+    return WhileKeywords.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
 }
 
 function isIfDef(remaining) {
-    return IfKeywords.some(k => new RegExp(`^${k}\\s(.*)\\s{`).test(remaining)) 
+    return IfKeywords.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
+}
+
+function isElseDef(remaining) {
+    return ElseKeywords.some(k => new RegExp(`^\\s*${k}\\s+{`).test(remaining)) 
 }
 
 function isComment(remaining) {

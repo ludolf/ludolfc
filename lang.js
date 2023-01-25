@@ -8,6 +8,7 @@ const Keywords = {
 const SizeKeywords = ['size', 'velikost', 'größe']
 const WhileKeywords = ['while', 'dokud', 'solange']
 const IfKeywords = ['if', 'pokud', 'falls']
+const ElseKeywords = ['else', 'jinak', 'sonst']
 
 const Errors = {
     INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
@@ -297,6 +298,9 @@ class LangString extends LangValueObject {
 
         this.concat = new LangNativeFunction(x => new LangString(this.value + x.value))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
+        
+        this.plus = this.concat
+        for (let s of SizeKeywords) this[s] = this.value.length
     }
 }
 
@@ -321,6 +325,7 @@ class LangArray extends LangValueObject {
 
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
 
+        this.plus = this.concat
         for (let s of SizeKeywords) this[s] = this.value.length
     }
     element(indexes, newValue) {
@@ -379,6 +384,7 @@ module.exports = {
     SizeKeywords,
     WhileKeywords,
     IfKeywords,
+    ElseKeywords,
     Block,
     Assignment,
     While,

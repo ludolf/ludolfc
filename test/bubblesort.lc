@@ -1,0 +1,26 @@
+inputArr := [5,4,8,2,1,9,3,7,6]
+
+len := inputArr.size
+i := 0
+while i < len {
+    j := 0
+    while j < len - 1 {
+        if inputArr[j] > inputArr[j + 1] {
+            tmp := inputArr[j]
+            inputArr[j] := inputArr[j + 1]
+            inputArr[j + 1] := tmp
+        }
+        j := j + 1
+    }
+    i := i + 1
+}
+
+_0 := inputArr[0]
+_1 := inputArr[1]
+_2 := inputArr[2]
+_3 := inputArr[3]
+_4 := inputArr[4]
+_5 := inputArr[5]
+_6 := inputArr[6]
+_7 := inputArr[7]
+_8 := inputArr[8]

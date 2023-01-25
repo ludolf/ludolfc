@@ -2,9 +2,9 @@ const Parser = require('./parser')
 const Interpret = require('./interpret')
 
 class LudolfC {
-    constructor() {
+    constructor(imports = {}) {
         this.parser = new Parser()
-        this.interpret = new Interpret()
+        this.interpret = new Interpret(imports)
     }
 
     execute(code) {

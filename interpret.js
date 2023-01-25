@@ -7,12 +7,15 @@ const {
 const Parser = require('./parser')
 
 class Interpret {
-    constructor() {
+    constructor(imports = {}) {
         this.variables = new Map()
+        this.imports = imports
     }
 
     execute(ast) {
         this.variables.clear()
+        if (this.imports) Object.entries(this.imports).forEach(([k,v]) => this.variables.set(k, v))
+
         return this.executeBlock(ast)
     }
 
@@ -188,7 +191,11 @@ class Interpret {
     }
 
     executeIf(ifStm) {
-        
+        if (!ifStm.condition || !ifStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION)
+        const cond = this.executeExpressionPart(ifStm.condition)
+        if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE)
+        if (cond.value) this.executeBlock(ifStm.body)
+        else if (ifStm.elseBody) this.executeBlock(ifStm.elseBody)
     }
 
     hasVariable(name) {
