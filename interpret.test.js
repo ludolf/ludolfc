@@ -843,3 +843,157 @@ test('interpret array concat #4', () => {
   expect(result.value[2].value).toBe(3)
   expect(result.value[3].value).toBe(4)
 })
+
+test('interpret array size', () => {
+  const ast = parser.parse('[1].size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret array size #2', () => {
+  const ast = parser.parse('[].size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(0)
+})
+
+test('interpret array size #3', () => {
+  const ast = parser.parse('[1,2].size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret array size #4', () => {
+  const ast = parser.parse('[1,2].size + 1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret array size #5', () => {
+  const ast = parser.parse('[1,2].velikost')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret string size', () => {
+  const ast = parser.parse('"a".size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret string size #2', () => {
+  const ast = parser.parse('"".size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(0)
+})
+
+test('interpret string size #3', () => {
+  const ast = parser.parse('"ab".size')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret string size #4', () => {
+  const ast = parser.parse('"ab".size + 1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret string size #5', () => {
+  const ast = parser.parse('"ab".velikost')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret array eq', () => {
+  const ast = parser.parse('[1] = [1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret array eq #2', () => {
+  const ast = parser.parse('[] = []')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret array eq #3', () => {
+  const ast = parser.parse('[1,2] = [1,2]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret array eq #4', () => {
+  const ast = parser.parse('[1,2] = [1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret array eq #5', () => {
+  const ast = parser.parse('[1,2] = [2,1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret array eq #6', () => {
+  const ast = parser.parse('[[1],2] = [[1],2]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret array eq #7', () => {
+  const ast = parser.parse('[[1,3],2] = [[1],2]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret object eq', () => { // all objects are unique => always false
+  const ast = parser.parse('{} = {}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret object eq #2', () => { // all objects are unique => always false
+  const ast = parser.parse('{a:1} = {a:1}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret function eq', () => {
+  const ast = parser.parse('(){} = (){}')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret void eq', () => {
+  const ast = parser.parse('(){}() = (){}()')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret complex eq', () => {
+  const ast = parser.parse('[1,{}] = [1,{}]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})

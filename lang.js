@@ -30,6 +30,7 @@ const Errors = {
     ATTRIBUTE_ALREADY_EXISTS: 'ATTRIBUTE_ALREADY_EXISTS',
     EMPTY_EXPRESSION: 'EMPTY_EXPRESSION',
     UNKNOWN_OPERATOR: 'UNKNOWN_OPERATOR',
+    OPERATOR_NOT_APPLICABLE: 'OPERATOR_NOT_APPLICABLE',
     ACCESS_OPERATOR_EXPECTED: 'ACCESS_OPERATOR_EXPECTED',
     WRONG_UNI_OPERATOR_SUBJECT: 'WRONG_UNI_OPERATOR_SUBJECT',
     WRONG_BI_OPERATOR_SUBJECTS: 'WRONG_BI_OPERATOR_SUBJECTS',
@@ -147,10 +148,16 @@ class UniOperator extends Operator {
         this.precedence = this.getPrecedence()
     }
     apply(a) {
-        switch (this.op) {
-            case '!': 
-            case '-': return a.neg.call()
-            default: throw new LangError(Errors.INVALID_UNI_OPERATOR, this.op)
+        const fn = getFn(this.op)
+        if (!fn || !fn.call) throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, this.op)
+        return fn.call()
+
+        function getFn(op) {
+            switch (op) {
+                case '!': 
+                case '-': return a.neg
+                default: throw new LangError(Errors.INVALID_UNI_OPERATOR, this.op)
+            }
         }
     }
     getPrecedence() { // based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
@@ -169,21 +176,30 @@ class BiOperator extends Operator {
         this.precedence = this.getPrecedence()
     }
     apply(a, b) {
-        switch (this.op) {
-            case '*': return a.mult.call(null, b)
-            case '/': return a.div.call(null, b)
-            case '%': return a.mod.call(null, b)
-            case '+': return a.plus.call(null, b)
-            case '-': return a.minus.call(null, b)
-            case '<': return a.lt.call(null, b)
-            case '<=': return a.le.call(null, b)
-            case '>': return a.gt.call(null, b)
-            case '>=': return a.ge.call(null, b)
-            case '=': return a.eq.call(null, b)
-            case '!=': return a.ne.call(null, b)
-            case '&': return a.and.call(null, b)
-            case '|': return a.or.call(null, b)
-            default: throw new LangError(Errors.INVALID_BI_OPERATOR, this.op)
+        const fn = getFn(this.op)
+        if (!fn || !fn.call) {
+            if ('=' === this.op) return new LangBoolean(false)
+            throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, this.op)
+        }
+        return fn.call(null, b)
+
+        function getFn(op) {
+            switch (op) {
+                case '*': return a.mult
+                case '/': return a.div
+                case '%': return a.mod
+                case '+': return a.plus
+                case '-': return a.minus
+                case '<': return a.lt
+                case '<=': return a.le
+                case '>': return a.gt
+                case '>=': return a.ge
+                case '=': return a.eq
+                case '!=': return a.ne
+                case '&': return a.and
+                case '|': return a.or
+                default: throw new LangError(Errors.INVALID_BI_OPERATOR, this.op)
+            }
         }
     }
     getPrecedence() { // based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
@@ -251,7 +267,7 @@ class LangObject {
         this.value = value
         this.type = type
         this.isObject = true
-        this.parent = null
+        this.parent = null        
     }
     attribute(name, newValue) {
         const value = this[name] ? this[name] : this.value[name] // explicit attrs have priority over native ones
@@ -300,7 +316,7 @@ class LangString extends LangValueObject {
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
         
         this.plus = this.concat
-        for (let s of SizeKeywords) this[s] = this.value.length
+        for (let s of SizeKeywords) this[s] = new LangNumber(this.value.length)
     }
 }
 
@@ -326,7 +342,15 @@ class LangArray extends LangValueObject {
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
 
         this.plus = this.concat
-        for (let s of SizeKeywords) this[s] = this.value.length
+        for (let s of SizeKeywords) this[s] = new LangNumber(this.value.length)
+
+        this.eq = new LangNativeFunction(x => {
+            if (!x || !x.value) return new LangBoolean(false)
+            if (this.value.length !== x.value.length) return new LangBoolean(false)
+            for (let i = 0; i < this.value.length; i++)
+                if (!this.value[i].eq || !this.value[i].eq.value(x.value[i]).value) return new LangBoolean(false)
+            return new LangBoolean(true)
+        })
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
@@ -355,6 +379,7 @@ class LangFunction extends LangObject {
     constructor(body, args) {
         super(body, Types.FUNCTION)
         this.args = args
+        this.eq = new LangNativeFunction(x => new LangBoolean(false))
     }
 }
 
