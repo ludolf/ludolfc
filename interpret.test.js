@@ -997,3 +997,31 @@ test('interpret complex eq', () => {
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(false)
 })
+
+test('interpret complex eq #2', () => {
+  const ast = parser.parse('[[1,["a"],[1,2,3/2,[]]]] = [[1,["a"],[1,2,3/2,[]]]]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret redefine eq', () => {
+  const ast = parser.parse('o:={eq:(x){true}}\no.eq({})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret redefine eq #2', () => {
+  const ast = parser.parse('o:={id:1,eq:(x){x.id=id}}\no.eq({id:1})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret redefine eq #3', () => {
+  const ast = parser.parse('o:={id:1,eq:(x){x.id=id}}\no.eq({id:2})')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
