@@ -13,11 +13,11 @@ class LudolfC {
     }
 
     hasVariable(name) {
-        return this.interpret.hasVariable(name)
+        return this.interpret.variables.hasVariable(name)
     }
 
     getVariable(name) {
-        return this.interpret.getVariable(name)
+        return this.interpret.variables.getVariable(name)
     }
 }
 

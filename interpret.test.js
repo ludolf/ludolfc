@@ -262,6 +262,13 @@ test('interpret r expression array expression resolved #2', () => {
   expect(result.value).toBe(true)
 })
 
+test('interpret r expression array expression scoped', () => {
+  const ast = parser.parse('a:=1\nf:=(a){a:=2}\nb:=[f(3)]\na=1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
 test('interpret r expression array expression resolved', () => {
   const ast = parser.parse('a:=1\nb:={a:a}\na:=2\nb.a')
   const result = interpret.execute(ast)
@@ -271,6 +278,13 @@ test('interpret r expression array expression resolved', () => {
 
 test('interpret r expression object expression resolved #2', () => {
   const ast = parser.parse('a:=1\nf:=(){a:=2}\nb:={a:f()}\na=2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret r expression object expression scoped', () => {
+  const ast = parser.parse('a:=1\nf:=(a){a:=2}\nb:={a:f(3)}\na=1')
   const result = interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(true)
@@ -1059,4 +1073,85 @@ test('interpret redefine eq #3', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(false)
+})
+
+test('interpret scoped variable', () => {
+  const ast = parser.parse('f:=(a){a:=1\na}\nf(2)')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret scoped variable #2', () => {
+  const ast = parser.parse('a:=3\nf:=(a){a:=1}\nf(2)\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret scoped variable #3', () => {
+  const ast = parser.parse('a:=3\nf:=(){a:=1}\nf()\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret scoped variable #4', () => {
+  const ast = parser.parse('a:=3\nf:=(a){a:=a}\nf(2)\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret scoped variable #5', () => {
+  const ast = parser.parse('a:=3\nf:=(a){}\nf(2)\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret scoped variable #6', () => {
+  const ast = parser.parse('b:=2\nf:=(a){a:=1}\nf(b)\nb')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret scoped variable #7', () => {
+  const ast = parser.parse('if true {a:=2} else {a:=3}\ntrue')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret scoped variable #8', () => {
+  const ast = parser.parse('a:=1\nif a=1 {a:=2} else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret scoped variable error', () => {
+  const ast = parser.parse('f:=(){a:=1}\nf()\na')
+  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
+})
+
+test('interpret scoped variable error #2', () => {
+  const ast = parser.parse('f:=(a){a:=1}\nf(1)\na')
+  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
+})
+
+test('interpret scoped variable error #3', () => {
+  const ast = parser.parse('b:=1\nf:=(a){a:=1}\nf(b)\na')
+  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
+})
+
+test('interpret scoped variable error #4', () => {
+  const ast = parser.parse('if true {a:=1} else {a:=2}\na')
+  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
+})
+
+test('interpret scoped variable error #5', () => {
+  const ast = parser.parse('i:=0\nwhile i=0 {a:=1\ni:=2}\na')
+  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
 })

@@ -8,22 +8,21 @@ const Parser = require('./parser')
 
 class Interpret {
     constructor(imports = {}) {
-        this.variables = new Map()
-        this.imports = imports
+        this.variables = new VariablesScope(imports)
     }
 
     execute(ast) {
         this.variables.clear()
-        if (this.imports) Object.entries(this.imports).forEach(([k,v]) => this.variables.set(k, v))
-
-        return this.executeBlock(ast)
+        return this.executeBlock(ast, false)
     }
 
-    executeBlock(block) {
+    executeBlock(block, newScope = true) {        
+        if (newScope) this.variables.pushScope()
         let result
         for (let stm of block.statements) {
             result = this.executeStatement(stm)
         }
+        if (newScope) this.variables.popScope()
         return result ? result : new LangVoid()
     }
 
@@ -112,8 +111,8 @@ class Interpret {
 
     executeExpressionPart(expressionPart) {
         if (expressionPart.isReference) {
-            if (!this.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.varName)
-            return this.getVariable(expressionPart.varName)
+            if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.varName)
+            return this.variables.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
             return this.executeExpression(expressionPart)
@@ -140,31 +139,23 @@ class Interpret {
         }
 
         if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH)
-        // cache scoped variables
-        const cache = {}
+        // scoped variables
         let i = 0
+        this.variables.pushScope()
         for (let arg of f.args) {
-            if (this.variables.has(arg)) cache[arg] = this.variables.get(arg)
-            this.variables.set(arg, params[i++])
+            this.variables.setVariable(arg, params[i++], true)
         }
         if (f.parent) {
             // cache "this" object into variable $
-            if (this.variables.has('$')) cache['$'] = this.variables.get('$')
-            this.variables.set('$', f.parent)
+            this.variables.setVariable('$', f.parent, true)
         }
         
         try {
-            const result = this.executeBlock(f.value)
+            const result = this.executeBlock(f.value, false)
             return result
 
         } finally {  // clean up variables
-            if (cache['$']) this.variables.set('$', cache['$'])
-            else this.variables.delete('$')
-
-            for (let arg of f.args) {
-                if (cache[arg]) this.variables.set(arg, cache[arg])
-                else this.variables.delete(arg)
-            }
+            this.variables.popScope()
         }
     }
 
@@ -172,7 +163,7 @@ class Interpret {
         if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT)
         const value = this.executeExpressionPart(assignment.right)
         if (assignment.left.isVariable) {
-            this.variables.set(assignment.left.name, value)
+            this.variables.setVariable(assignment.left.name, value)
         } else
         if (assignment.left.isExpression) {
             this.executeExpression(assignment.left, value)
@@ -198,22 +189,63 @@ class Interpret {
         else if (ifStm.elseBody) this.executeBlock(ifStm.elseBody)
     }
 
+}
+
+class VariablesScope {
+    constructor(imports = {}) {
+        this.variables = [new Map()]
+        this.imports = imports
+    }
+
+    clear() {
+        this.variables = [new Map()]
+        if (this.imports) Object.entries(this.imports).forEach(([k,v]) => this.variables[0].set(k, v))
+    }
+
     hasVariable(name) {
-        if (this.variables.has(name)) return true
-        if (this.variables.has('$')) {
-            const self = this.variables.get('$')
-            if (self.hasAttribute(name)) return true
+        for (let i = this.variables.length - 1; i >= 0; i--) {
+            if (this.variables[i].has(name)) return true
+            if (this.variables[i].has('$')) {
+                const self = this.variables[i].get('$')
+                if (self.hasAttribute(name)) return true
+            }
         }
         return false
     }
 
     getVariable(name) {
-        if (this.variables.has(name)) return this.variables.get(name)
-        if (this.variables.has('$')) {
-            const self = this.variables.get('$')
-            if (self.hasAttribute(name)) return self.attribute(name)
+        for (let i = this.variables.length - 1; i >= 0; i--) {
+            if (this.variables[i].has(name)) return this.variables[i].get(name)
+            if (this.variables[i].has('$')) {
+                const self = this.variables[i].get('$')
+                if (self.hasAttribute(name)) return self.attribute(name)
+            }
         }
         return false
+    }
+
+    setVariable(name, value, scoped = false) {
+        if (scoped) {
+            this.variables[this.variables.length - 1].set(name, value)
+            return
+        }
+        let found = false
+        for (let i = this.variables.length - 1; i >= 0; i--) {
+            if (this.variables[i].has(name)) {
+                this.variables[i].set(name, value)
+                found = true
+                break
+            }
+        }
+        if (!found) this.variables[this.variables.length - 1].set(name, value)
+    }
+
+    pushScope() {
+        this.variables.push(new Map())
+    }
+
+    popScope() {
+        this.variables.pop()
     }
 
 }
