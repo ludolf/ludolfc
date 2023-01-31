@@ -67,10 +67,13 @@ class Source {
 }
 
 class Parser {
-    constructor() {        
+    constructor() {    
+        this.steps = 0
+        this.maxSteps = 1000000 // to prevent infinite loops
     }
 
     parse(code) {
+        this.steps = 0
         return this.parseBlock(new Source(code))
     }
 
@@ -84,6 +87,8 @@ class Parser {
     }
 
     parseStatement(source) {
+        this._stepper()
+
         let token = ''
         
         let expecting = null
@@ -95,6 +100,8 @@ class Parser {
         }
 
         for (; !source.finished(); source.move()) {
+            this._stepper()
+
             const c = source.currentChar()
 
             // comment
@@ -211,9 +218,13 @@ class Parser {
     }
 
     parseExpression(source, openDefinitions, inGrouping = null) {
+        this._stepper()
+
         const parts = []
 
         while (!source.finished()) {
+            this._stepper()
+
             const c = source.currentChar()
 
             // spaces
@@ -376,9 +387,13 @@ class Parser {
     }
 
     parseMemberExpression(source) {
+        this._stepper()
+
         let token = ''
 
         for (; !source.finished(); source.move()) {
+            this._stepper()
+            
             const c = source.currentChar()
 
             // token ends
@@ -598,6 +613,11 @@ class Parser {
             token += c
         }
         if (token) return token
+    }
+
+    _stepper() {
+        this.steps++
+        if (this.steps > this.maxSteps) throw new LangParseError(Errors.PARSER_STEPS_EXCEEDED)
     }
 }
 

@@ -1858,3 +1858,26 @@ test('parse if else #6', () => {
   expect(ast.statements[2].body.statements[1].isAssignment).toBe(true)
   expect(ast.statements[3].isExpression).toBe(true)
 })
+
+test('parse max steps', () => {
+  const maxSteps_bak = parser.maxSteps
+  parser.maxSteps = 2
+  try {
+    expect(() => parser.parse('1 + 2 * 3')).toThrow()
+  } finally {
+    parser.maxSteps = maxSteps_bak
+  }
+})
+
+test('parse max steps ok', () => {
+  const maxSteps_bak = parser.maxSteps
+  parser.maxSteps = 100
+  try {
+    const ast = parser.parse('1 + 2 * 3')
+    expect(ast.statements).toHaveLength(1)
+    expect(ast.statements[0].isExpression).toBe(true)
+    expect(ast.statements[0].parts).toHaveLength(5)
+  } finally {
+    parser.maxSteps = maxSteps_bak
+  }
+})
