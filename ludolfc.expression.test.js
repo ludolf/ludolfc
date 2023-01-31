@@ -109,6 +109,14 @@ test('expression error wrong value', () => {
   expect(() => ludolfC.execute('1 2')).toThrow()
 })
 
+test('expression error wrong operators', () => {
+  expect(() => ludolfC.execute('1 + + 2')).toThrow()
+})
+
+test('expression error wrong uniop', () => {
+  expect(() => ludolfC.execute('- 1')).toThrow()
+})
+
 test('expression error wrong value #2', () => {
   expect(() => ludolfC.execute('a:=1\na 1')).toThrow()
 })

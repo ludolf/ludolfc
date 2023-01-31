@@ -213,23 +213,13 @@ class Parser {
     parseExpression(source, openDefinitions, inGrouping = null) {
         const parts = []
 
-        let expected = null
-
         while (!source.finished()) {
             const c = source.currentChar()
 
+            // spaces
             if (isSpace(c)) {
                 source.move()
                 continue
-            }
-
-            if (expected) {
-                if (c === expected) {  
-                    expected = null
-                    source.move()                  
-                    continue
-                }
-                throw new LangParseError(Errors.EXPECTED_SYMBOL, expected)
             }
 
             // end of the statement
@@ -298,9 +288,11 @@ class Parser {
                         throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar(), ')')
                     }
                 } else {    // grouping
-                    expected = ')'
                     const exp = this.parseExpression(source, openDefinitions, true)
                     parts.push(exp)
+                    consumeSpaces(source)
+                    if (')' !== source.currentChar()) throw new LangParseError(Errors.EXPECTED_SYMBOL, ')')
+                    source.move()
                 }
                 continue
             }
@@ -349,6 +341,7 @@ class Parser {
                 if (UniOperators.includes(c)) {
                     parts.push(new UniOperator(c))
                     source.move()
+                    if (isSpace(source.currentChar())) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar())
                     continue
                 }
             } else if (rightOperatorExpected()) {

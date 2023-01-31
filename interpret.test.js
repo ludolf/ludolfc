@@ -52,11 +52,46 @@ test('interpret expression number uniop #3', () => {
   expect(result.value).toBe(true)
 })
 
+test('interpret expression number uniop #4', () => {
+  const ast = parser.parse('-1 - 1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(-2)
+})
+
 test('interpret expression numbers ops', () => {
   const ast = parser.parse('-1 + 2 - -3')
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(4)
+})
+
+test('interpret expression numbers ops #2', () => {
+  const ast = parser.parse('3 / 9 * 3')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret expression numbers ops #3', () => {
+  const ast = parser.parse('1--1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret expression numbers ops #4', () => {
+  const ast = parser.parse('1+-1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(0)
+})
+
+test('interpret expression numbers ops #5', () => {
+  const ast = parser.parse('-1-1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(-2)
 })
 
 test('interpret expression numbers ops block', () => {
