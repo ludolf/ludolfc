@@ -9,10 +9,13 @@ const Parser = require('./parser')
 class Interpret {
     constructor(imports = {}) {
         this.variables = new VariablesScope(imports)
+        this.steps = 0
+        this.maxSteps = 100000 // to prevent infinite loops
     }
 
     execute(ast) {
         this.variables.clear()
+        this.steps = 0
         return this.executeBlock(ast, false)
     }
 
@@ -27,6 +30,7 @@ class Interpret {
     }
 
     executeStatement(stm) {
+        this._stepper()
         return stm.isExpression ? this.executeExpression(stm) :
                stm.isAssignment ? this.executeAssignemt(stm) :
                stm.isWhile ? this.executeWhile(stm) :
@@ -35,6 +39,7 @@ class Interpret {
     }
 
     executeExpression(expression, assignNewValue = null) {
+        this._stepper()
         if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION)
         let parts = [...expression.parts]
         let index
@@ -110,6 +115,7 @@ class Interpret {
     }
 
     executeExpressionPart(expressionPart) {
+        this._stepper()
         if (expressionPart.isReference) {
             if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.varName)
             return this.variables.getVariable(expressionPart.varName)
@@ -189,6 +195,10 @@ class Interpret {
         else if (ifStm.elseBody) this.executeBlock(ifStm.elseBody)
     }
 
+    _stepper() {
+        this.steps++
+        if (this.steps > this.maxSteps) throw new LangInterpretError(Errors.EXECUTION_STEPS_EXCEEDED)
+    }
 }
 
 class VariablesScope {

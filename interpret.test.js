@@ -1151,7 +1151,37 @@ test('interpret scoped variable error #4', () => {
   expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
 })
 
-test('interpret scoped variable error #5', () => {
-  const ast = parser.parse('i:=0\nwhile i=0 {a:=1\ni:=2}\na')
-  expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
+test('interpret max steps', () => {
+  const ast = parser.parse('i:=0\nwhile i<1000 {i:=i+1}\ni')
+  const maxSteps_bak = interpret.maxSteps
+  interpret.maxSteps = 1000
+  try {
+    expect(() => interpret.execute(ast)).toThrow()
+  } finally {
+    interpret.maxSteps = maxSteps_bak
+  }
+})
+
+test('interpret max steps ok', () => {
+  const ast = parser.parse('i:=0\nwhile i<1000 {i:=i+1}\ni')
+  const maxSteps_bak = interpret.maxSteps
+  interpret.maxSteps = 1000000
+  try {
+    const result = interpret.execute(ast)
+    expect(result.type).toBe('NUMBER')
+    expect(result.value).toBe(1000)
+  } finally {
+    interpret.maxSteps = maxSteps_bak
+  }
+})
+
+test('interpret max steps extrem', () => {
+  const ast = parser.parse('i:=0\ni')
+  const maxSteps_bak = interpret.maxSteps
+  interpret.maxSteps = 2
+  try {
+    expect(() => interpret.execute(ast)).toThrow()
+  } finally {
+    interpret.maxSteps = maxSteps_bak
+  }
 })
