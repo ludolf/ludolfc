@@ -344,7 +344,8 @@ class Parser {
                     if (isSpace(source.currentChar())) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.currentChar())
                     continue
                 }
-            } else if (rightOperatorExpected()) {
+            } else 
+            if (rightOperatorExpected()) {
                 const next2 = source.remaining(2)
                 if (BiOperators.includes(next2)) {
                     parts.push(new BiOperator(next2))
