@@ -133,15 +133,15 @@ class Interpret {
             const obj = expressionPart.value
             for (let k of Object.keys(obj)) {
                 obj[k] = this.executeExpressionPart(obj[k])
-                if (obj[k].isObject) obj[k].parent = expressionPart
+                if (obj[k].isObject || obj[k].isFunction) obj[k].parent = expressionPart
             }
         }
         return expressionPart
     }
 
     executeFunctionCall(f, params) {
-        if (f.native) {
-            return f.value(...params)
+        if (f.isNative) {
+            return f.call(...params)
         }
 
         if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH)
@@ -157,7 +157,7 @@ class Interpret {
         }
         
         try {
-            const result = this.executeBlock(f.value, false)
+            const result = this.executeBlock(f.body, false)
             return result
 
         } finally {  // clean up variables

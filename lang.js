@@ -183,7 +183,7 @@ class BiOperator extends Operator {
             if ('=' === this.op) return new LangBoolean(false)
             throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, this.op)
         }
-        return fn.call(null, b)
+        return fn.call(b)
 
         function getFn(op) {
             switch (op) {
@@ -269,13 +269,16 @@ class LangObject {
         this.value = obj
         this.type = type
         this.isObject = true
-        this.parent = null        
+        this.parent = null
+
+        this.eq = new LangNativeFunction(x => new LangBoolean(areObjectsEqual(this, x)))
+        this.ne = new LangNativeFunction(x => new LangBoolean(!(this.eq.call(x).value)))
     }
     attribute(name, newValue) {
         const value = this[name] ? this[name] : this.value[name] // explicit attrs have priority over native ones
         if (newValue && this.value[name]) this.value[name] = newValue
         if (value) return value
-        if (this.parent) return this.parent.attribute(name)        
+        if (this.parent) return this.parent.attribute(name)
     }
     hasAttribute(name) {
         const hasValue = this[name] || this.value[name]
@@ -350,10 +353,10 @@ class LangArray extends LangValueObject {
             if (!x || !x.value) return new LangBoolean(false)
             if (this.value.length !== x.value.length) return new LangBoolean(false)
             for (let i = 0; i < this.value.length; i++)
-                if (!this.value[i].eq || !this.value[i].eq.value(x.value[i]).value) return new LangBoolean(false)
+                if (!this.value[i].eq || !this.value[i].eq.isNative || !this.value[i].eq.call(x.value[i]).value) return new LangBoolean(false)
             return new LangBoolean(true)
         })
-        this.ne = new LangNativeFunction(x => new LangBoolean(!(this.eq.call(null, x).value)))
+        this.ne = new LangNativeFunction(x => new LangBoolean(!(this.eq.call(x).value)))
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
@@ -378,22 +381,25 @@ class LangArray extends LangValueObject {
     }
 }
 
-class LangFunction extends LangObject {
+class LangFunction {
     constructor(body, args) {
-        super(body, Types.FUNCTION)
+        this.type = Types.FUNCTION
+        this.body = body
         this.args = args
+        this.isFunction = true
         this.eq = new LangNativeFunction(x => new LangBoolean(false))
         this.ne = new LangNativeFunction(x => new LangBoolean(true))
     }
 }
 
-class LangNativeFunction extends LangObject {
+class LangNativeFunction {
     constructor(func) {
-        super(func, Types.FUNCTION)
-        this.native = true
+        this.type = Types.FUNCTION
+        this.func = func
+        this.isNative = true
     }
-    call(_, ...params) {
-        return this.value(...params)
+    call(...params) {
+        return this.func(...params)
     }
 }
 
@@ -404,6 +410,16 @@ class LangVoid extends LangValueObject {
         this.eq = new LangNativeFunction(x => new LangBoolean(false))
         this.ne = new LangNativeFunction(x => new LangBoolean(false))
     }
+}
+
+function areObjectsEqual(a, b) {
+    const aKeys = Object.keys(a.value)
+    const bKeys = Object.keys(b.value)
+    if (aKeys.length !== bKeys.length) return false
+    for (k of aKeys) {
+        if (!a.value[k].eq.call(b.value[k])) return false
+    }
+    return true
 }
 
 module.exports = {
