@@ -31,6 +31,13 @@ test('interpret expression number biop #3', () => {
   expect(result.value).toBe(9)
 })
 
+test('interpret expression number biop #4', () => {
+  const ast = parser.parse('f:=(){1}\nf()+2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
 test('interpret expression number uniop', () => {
   const ast = parser.parse('-1')
   const result = interpret.execute(ast)
@@ -1129,6 +1136,20 @@ test('interpret scoped variable #8', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(2)
+})
+
+test('interpret scoped variable #9', () => {
+  const ast = parser.parse('a:=1\nif a=1 { if a >= 1 {a:=2} else {a:=2.5} } else {a:=3}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret scoped variable #10', () => {
+  const ast = parser.parse('a:=1\nf:=(a){g:=(a){a:=2\na}\na:=g(10)+1}\nf(11)\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
 })
 
 test('interpret scoped variable error', () => {
