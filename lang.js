@@ -265,8 +265,8 @@ class VarReference {
 }
 
 class LangObject {
-    constructor(value, type = Types.OBJECT) {
-        this.value = value
+    constructor(obj, type = Types.OBJECT) {
+        this.value = obj
         this.type = type
         this.isObject = true
         this.parent = null        
@@ -353,6 +353,7 @@ class LangArray extends LangValueObject {
                 if (!this.value[i].eq || !this.value[i].eq.value(x.value[i]).value) return new LangBoolean(false)
             return new LangBoolean(true)
         })
+        this.ne = new LangNativeFunction(x => new LangBoolean(!(this.eq.call(null, x).value)))
     }
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
@@ -382,6 +383,7 @@ class LangFunction extends LangObject {
         super(body, Types.FUNCTION)
         this.args = args
         this.eq = new LangNativeFunction(x => new LangBoolean(false))
+        this.ne = new LangNativeFunction(x => new LangBoolean(true))
     }
 }
 

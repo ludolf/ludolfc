@@ -1019,6 +1019,27 @@ test('interpret array eq #7', () => {
   expect(result.value).toBe(false)
 })
 
+test('interpret array ne', () => {
+  const ast = parser.parse('[1] != [2]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret array ne #2', () => {
+  const ast = parser.parse('[1] != [1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret array ne #3', () => {
+  const ast = parser.parse('[1,2] != [1]')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
 test('interpret object eq', () => { // all objects are unique => always false
   const ast = parser.parse('{} = {}')
   const result = interpret.execute(ast)
