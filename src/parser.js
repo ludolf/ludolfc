@@ -16,14 +16,14 @@ const {
     ObjectAccess,
     FunctionCall,
     VarReference,
-    LangParseError,
-    LangObject,
-    LangNumber,
-    LangString,
-    LangBoolean,
-    LangArray,
-    LangFunction,
-    LangVoid } = require('./lang')
+    ParseError: LangParseError,
+    Object: LangObject,
+    Number: LangNumber,
+    String: LangString,
+    Boolean: LangBoolean,
+    Array: LangArray,
+    Function: LangFunction,
+    Void: LangVoid } = require('./lang')
 
 const UniOperators = ['!', '-']
 const BiOperators = ['*', '/', '%', '+', '-', '<', '<=', '>', '>=', '=', '!=', '&', '|']
@@ -398,7 +398,7 @@ class Parser {
 
             // token ends
             if (isExpressionSeparator(c)) {
-                if ('.' === c && /^[1-9][0-9]*$/.test(token) && /[0-9]/.test(source.next())) { // float number
+                if ('.' === c && /^(0|([1-9][0-9]*))$/.test(token) && /[0-9]/.test(source.next())) { // float number
                     token += c
                     continue
                 }

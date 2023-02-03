@@ -1,5 +1,5 @@
-const LudolfC = require('./ludolfc')
-const ludolfC = new LudolfC();
+const { LudolfC } = require('./ludolfc')
+const ludolfC = new LudolfC()
 
 test('expression number simplest', () => {
   expect(ludolfC.execute('1').value).toBe(1)

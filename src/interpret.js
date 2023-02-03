@@ -1,10 +1,8 @@
 const { 
     Types,
     Errors,
-    LangInterpretError,
-    LangVoid } = require('./lang')
-
-const Parser = require('./parser')
+    InterpretError: LangInterpretError,
+    Void: LangVoid } = require('./lang')
 
 class Interpret {
     constructor(imports = {}) {
@@ -42,7 +40,31 @@ class Interpret {
         this._stepper()
         if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION)
         let parts = [...expression.parts]
-        let index
+        return this.executeExpressionParts(parts, assignNewValue)
+    }
+
+    executeExpressionParts(parts, assignNewValue = null) {
+        // logical operators short circuit
+        let index = findFirstOp('&')
+        if (index) {
+            const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
+            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (!left.value) return left
+            const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
+            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            return right
+        }
+        index = findFirstOp('|')
+        if (index) {
+            const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
+            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (left.value) return left
+            const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
+            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            return right
+        }
+
+        // left to right by precendence
         let assignApplied = false
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
@@ -111,6 +133,11 @@ class Interpret {
 
         function isLastOperator() {
             return parts.length === 2
+        }
+
+        function findFirstOp(op) {
+            for (let i = 0; i < parts.length; i++)
+                if (parts[i].isBi && parts[i].op === op) return i
         }
     }
 

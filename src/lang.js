@@ -58,22 +58,26 @@ const Types = {
 
 class LangError extends Error {
     constructor(id, arg1, arg2) {
-        super(`Error ${id} ${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`)
+        super(id)
+        this.message = `${id} ${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`
         this.id = id
         this.arg1 = arg1
         this.arg2 = arg2
+        this.isLangError = true
     }
 }
 
 class LangParseError extends LangError {
     constructor(id, arg1, arg2) {
         super(id, arg1, arg2)
+        this.isParseError = true
     }
 }
 
 class LangInterpretError extends LangError {
     constructor(id, arg1, arg2) {
         super(id, arg1, arg2)
+        this.isInterpretError = true
     }
 }
 
@@ -361,7 +365,7 @@ class LangArray extends LangValueObject {
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
             const index = Math.ceil(c.value)
-            if (index >= a.value.length) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS)
+            if (index < 0 || index >= a.value.length) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS)
             const v = a.value[index]
             // set the value for the last element
             if (newValue && i === indexes.length - 1)
@@ -442,14 +446,14 @@ module.exports = {
     ObjectAccess,
     FunctionCall,
     VarReference,
-    LangParseError,
-    LangInterpretError,
-    LangObject,
-    LangNumber,
-    LangString,
-    LangBoolean,
-    LangArray,
-    LangFunction,
-    LangNativeFunction,
-    LangVoid,
+    ParseError: LangParseError,
+    InterpretError: LangInterpretError,
+    Object: LangObject,
+    Number: LangNumber,
+    String: LangString,
+    Boolean: LangBoolean,
+    Array: LangArray,
+    Function: LangFunction,
+    NativeFunction: LangNativeFunction,
+    Void: LangVoid,
 }

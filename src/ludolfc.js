@@ -1,3 +1,4 @@
+const lang = require('./lang')
 const Parser = require('./parser')
 const Interpret = require('./interpret')
 
@@ -21,4 +22,4 @@ class LudolfC {
     }
 }
 
-module.exports = LudolfC
+module.exports = { LudolfC, lang }

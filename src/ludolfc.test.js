@@ -1,9 +1,8 @@
-const fs = require('fs');
-const { LangObject, LangNativeFunction, LangNumber } = require('./lang');
-const LudolfC = require('./ludolfc')
+const fs = require('fs')
+const { LudolfC, lang } = require('./ludolfc')
 const ludolfC = new LudolfC({
-  Math: new LangObject({floor: new LangNativeFunction(x => new LangNumber(Math.floor(x.value)))})
-});
+  Math: new lang.Object({floor: new lang.NativeFunction(x => new lang.Number(Math.floor(x.value)))})
+})
 
 test('eight times zero', () => {
   ludolfC.execute(fs.readFileSync('./test/eight.lc'))
@@ -70,6 +69,31 @@ test('bubblesort', () => {
   expect(ludolfC.hasVariable('_8')).toBe(true)
   expect(ludolfC.getVariable('_8').type).toBe('NUMBER')
   expect(ludolfC.getVariable('_8').value).toBe(9)
+})
+
+test('insertionsort', () => {
+  const result = ludolfC.execute(fs.readFileSync('./test/insertionsort.lc'))
+  expect(ludolfC.hasVariable('arr')).toBe(false)
+  expect(result.type).toBe('ARRAY')
+  expect(result.value).toHaveLength(9)
+  expect(result.value[0].type).toBe('NUMBER')
+  expect(result.value[0].value).toBe(1)
+  expect(result.value[1].type).toBe('NUMBER')
+  expect(result.value[1].value).toBe(2)
+  expect(result.value[2].type).toBe('NUMBER')
+  expect(result.value[2].value).toBe(3)
+  expect(result.value[3].type).toBe('NUMBER')
+  expect(result.value[3].value).toBe(4)
+  expect(result.value[4].type).toBe('NUMBER')
+  expect(result.value[4].value).toBe(5)
+  expect(result.value[5].type).toBe('NUMBER')
+  expect(result.value[5].value).toBe(6)
+  expect(result.value[6].type).toBe('NUMBER')
+  expect(result.value[6].value).toBe(7)
+  expect(result.value[7].type).toBe('NUMBER')
+  expect(result.value[7].value).toBe(8)
+  expect(result.value[8].type).toBe('NUMBER')
+  expect(result.value[8].value).toBe(9)
 })
 
 test('factorial', () => {

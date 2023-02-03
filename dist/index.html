@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LudolfC Programming Language</title>
+    <meta name="author" content="Tomas Tulka">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <meta charset="utf-8">
+    <script src="ludolfc.js"></script>
+    <style>
+        body { margin: 2rem; }
+        h1 { font-size: 2rem; }
+        #code { font-size: 1.2rem; width: 100%; padding: 1rem; background-color: beige; box-sizing: border-box; }
+        #run { font-size: 1.5rem; font-weight: bold; padding: 0.5em 3em; }
+        #result { font-size: 2rem; color: blue; }
+        .error { color: red !important; }
+        @media (max-width: 600px) {
+            body { margin: 1rem; }
+            h1 { font-size: 1.2rem; }
+            #code { font-size: 0.8rem; }
+            #run { font-size: 0.8rem; }
+            #result { font-size: 1rem;  }
+        }
+    </style>
+  </head>
+  <body>
+    <h1>LudolfC Programming Language</h1>
+    <form>
+        <div>
+            <textarea id="code" rows="20" spellcheck="false" wrap="off">
+// Insertion Sort
+
+insertionSort := (arr) {
+    n := arr.size
+    i := 1
+    while i < n {
+        current := arr[i]
+        j := i - 1 
+        while j > -1 & current < arr[j] {
+            arr[j + 1] := arr[j]
+            j := j - 1
+        }
+        arr[j + 1] := current
+        i := i + 1
+    }
+    arr
+}
+
+insertionSort([8,5,6,3,2,1,7,9,4])
+            </textarea>
+        </div>        
+        <div>
+            <button id="run" type="button">Run it</button>
+        </div>
+    </form>
+    <pre id="result"></pre>
+    <script>
+        var ludolfC = new ludolfc.LudolfC()
+        
+        var codeTextarea = document.getElementById('code')
+        var resultPre = document.getElementById('result')
+        document.getElementById('run').addEventListener('click', () => {
+            try {
+                var result = ludolfC.execute(codeTextarea.value)
+                if (resultPre.classList.contains('error')) resultPre.classList.remove('error')
+                resultPre.innerHTML = stringify(result)
+            } catch (e) {
+                console.error(e)
+                if (!resultPre.classList.contains('error')) resultPre.classList.add('error')
+                if (e.isLangError) {
+                    resultPre.innerHTML = (e.isParseError ? 'PARSE' : '') + ' ERROR: ' + e.message
+                } else {
+                    resultPre.innerHTML = 'ERROR ' + e
+                }                
+            }
+        })
+
+        function stringify(obj)  {
+            return 'VOID' === obj.type ? '' :
+                   'ARRAY' === obj.type ? '[' + obj.value.map(stringify) + ']' :
+                   'OBJECT' === obj.type ? '{' + Object.keys(obj.value).map(k => k + ':' + stringify(obj.value[k])) + '}' :
+                   'BOOLEAN' === obj.type ? stringify(obj.value) :
+                   obj.value ? stringify(obj.value) : 
+                   obj.isFunction ? '[function]' : JSON.stringify(obj)
+        }
+    </script>
+  </body>
+</html>

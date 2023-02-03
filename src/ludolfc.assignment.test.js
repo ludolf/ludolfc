@@ -1,5 +1,5 @@
-const LudolfC = require('./ludolfc')
-const ludolfC = new LudolfC();
+const { LudolfC } = require('./ludolfc')
+const ludolfC = new LudolfC()
 
 test('assignment number simplest', () => {
   ludolfC.execute('a := 1')

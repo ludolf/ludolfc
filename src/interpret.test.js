@@ -10,6 +10,34 @@ test('interpret expression number simplest', () => {
   expect(result.value).toBe(1)
 })
 
+test('interpret expression number decimal', () => {
+  const ast = parser.parse('1.2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1.2)
+})
+
+test('interpret expression number decimal #2', () => {
+  const ast = parser.parse('0.25')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(0.25)
+})
+
+test('interpret expression number decimal #3', () => {
+  const ast = parser.parse('-1.2')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(-1.2)
+})
+
+test('interpret expression number decimal #4', () => {
+  const ast = parser.parse('-0.25')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(-0.25)
+})
+
 test('interpret expression number biop', () => {
   const ast = parser.parse('1 + 2')
   const result = interpret.execute(ast)
@@ -106,6 +134,34 @@ test('interpret expression numbers ops block', () => {
   const result = interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(4)
+})
+
+test('interpret expression boolean op precedence', () => {
+  const ast = parser.parse('false | true & false')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret expression boolean op precedence #2', () => {
+  const ast = parser.parse('(false | true) & false')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret expression boolean op precedence #3', () => {
+  const ast = parser.parse('true | true & false')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret expression boolean op precedence #4', () => {
+  const ast = parser.parse('false | true & true')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
 })
 
 test('interpret expression group', () => {
@@ -1188,6 +1244,20 @@ test('interpret scoped variable #10', () => {
   expect(result.value).toBe(1)
 })
 
+test('interpret scoped variable #11', () => {
+  const ast = parser.parse('a:=1\nwhile a=1 {a:=2}\na')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret scoped variable #12', () => {
+  const ast = parser.parse('i:=10\nwhile i=10 {a:=1\nwhile a<3 {a:=a+1}\ni:=a}\ni')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
 test('interpret scoped variable error', () => {
   const ast = parser.parse('f:=(){a:=1}\nf()\na')
   expect(() => interpret.execute(ast)).toThrow()  // a does not exist in the global scope
@@ -1241,4 +1311,81 @@ test('interpret max steps extrem', () => {
   } finally {
     interpret.maxSteps = maxSteps_bak
   }
+})
+
+test('interpret and evaluation', () => {
+  const ast = parser.parse('1 < 0 & x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret and evaluation #2', () => {
+  const ast = parser.parse('1 > 0 & 2 < 0 & x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret and evaluation #3', () => {
+  const ast = parser.parse('1 > 0 & 2 < 0 & x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret or evaluation', () => {
+  const ast = parser.parse('1 > 0 | x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret or evaluation #2', () => {
+  const ast = parser.parse('1 < 0 | 2 > 0 | x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit', () => {
+  const ast = parser.parse('true | x & false & y')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #2', () => {
+  const ast = parser.parse('true & true | x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit #3', () => {
+  const ast = parser.parse('false & x | false')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #4', () => {
+  const ast = parser.parse('1 > 0 | x & 1 < 0 & y')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #5', () => {
+  const ast = parser.parse('1 > 0 & 2 > 1 | x')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit #6', () => {
+  const ast = parser.parse('1 < 0 & x | 2 < 1')
+  const result = interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
 })

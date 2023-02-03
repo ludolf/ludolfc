@@ -4,7 +4,8 @@
   "description": "LudolfC programming language",
   "main": "ludolfc.js",
   "scripts": {
-    "test": "jest --ci --testResultsProcessor=jest-junit"
+    "test": "jest --ci --testResultsProcessor=jest-junit",
+    "build": "snowpack build"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,8 @@
   "homepage": "https://github.com/ludolf/ludolfc#readme",
   "devDependencies": {
     "jest": "^29.3.1",
-    "jest-junit": "^15.0.0"
+    "jest-junit": "^15.0.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }
