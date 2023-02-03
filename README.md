@@ -1,12 +1,13 @@
+
 # LudolfC Programming Language
 
 LudolfC is a simple programming language for learning concepts of structured, 
     object-oriented and functional programming.
 
-<img src="logo.svg" style="height: 6rem; float: right;" align="right">
+<img src="logo.svg" style="width: 20rem; float: right;" align="right">
 
 ```
-npm install ludolfc
+npm i ludolfc
 ```
 
 ## Language
@@ -25,7 +26,8 @@ Variable names are case-insensitive.
 
 ### Data types
 
-LudolfC is a dynamically-typed language. The type of a variable can differ with each assignment.
+LudolfC is a dynamically-typed language. The type of a variable can differ with 
+each assignment.
 
 #### Numbers
 ```
@@ -56,11 +58,13 @@ t := 1 != 2
 ```
 
 #### Void
-Void is a special data type with an empty value. Void is a result of statement executions or calls of empty functions.
+Void is a special data type with an empty value. Void is a result of statement 
+executions or calls of empty functions.
 
 ### Arrays
 
-Arrays are heterogeneous collections of indexed elements whose index starts at zero.
+Arrays are heterogeneous collections of indexed elements whose index starts at 
+zero.
 
 ```
 arr := []
