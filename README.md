@@ -1,14 +1,14 @@
 
 # LudolfC Programming Language
 
-<img src="logo.svg" style="width: 20rem; float: right;" align="right">
-
 LudolfC is a simple programming language for learning concepts of structured, 
     object-oriented and functional programming.
 
-## Language
+<img src="logo.svg" style="width: 20rem; float: right;" align="right">
 
-### Assignement
+## Language Syntax
+
+### Assignment
 ```
 name := value
 ```
@@ -94,7 +94,7 @@ arr[1].size
 
 ### Conditionals
 
-Conditionals are boolean-condition-controled branches of the program.
+Conditionals are boolean-condition-controlled branches of the program.
 
 ```
 if condition {
