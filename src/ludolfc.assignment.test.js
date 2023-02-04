@@ -2704,6 +2704,34 @@ test('assignment function nested', () => {
   expect(ludolfC.getVariable('a').value).toBe(21)
 })
 
+test('assignment function inner exec', () => {
+  ludolfC.execute('f := (){ g := (){1}\n g() }\na := f()')
+  expect(ludolfC.hasVariable('a')).toBe(true)
+  expect(ludolfC.getVariable('a').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('a').value).toBe(1)
+})
+
+test('assignment function inner exec #2', () => {
+  ludolfC.execute('f := (){ f := (){1}\n f() + 1 }\na := f()')
+  expect(ludolfC.hasVariable('a')).toBe(true)
+  expect(ludolfC.getVariable('a').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('a').value).toBe(2)
+})
+
+test('assignment function object exec', () => {
+  ludolfC.execute('o := {f:(){1}}\na := o.f()')
+  expect(ludolfC.hasVariable('a')).toBe(true)
+  expect(ludolfC.getVariable('a').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('a').value).toBe(1)
+})
+
+test('assignment function object inner exec', () => {
+  ludolfC.execute('o := {a:1,f:(){a}}\na := o.f()')
+  expect(ludolfC.hasVariable('a')).toBe(true)
+  expect(ludolfC.getVariable('a').type).toBe('NUMBER')
+  expect(ludolfC.getVariable('a').value).toBe(1)
+})
+
 test('assignment object inner attributes', () => {
   ludolfC.execute('o := {a:1,f:(){a}}\na := o.f()')
   expect(ludolfC.hasVariable('a')).toBe(true)
