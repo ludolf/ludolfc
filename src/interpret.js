@@ -28,7 +28,7 @@ class Interpret {
     }
 
     executeStatement(stm) {
-        this._stepper()
+        this._stepper(stm.source)
         return stm.isExpression ? this.executeExpression(stm) :
                stm.isAssignment ? this.executeAssignemt(stm) :
                stm.isWhile ? this.executeWhile(stm) :
@@ -37,8 +37,8 @@ class Interpret {
     }
 
     executeExpression(expression, assignNewValue = null) {
-        this._stepper()
-        if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION)
+        this._stepper(expression.source)
+        if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION, expression.source)
         let parts = [...expression.parts]
         return this.executeExpressionParts(parts, assignNewValue)
     }
@@ -48,19 +48,19 @@ class Interpret {
         let index = findFirstOp('&')
         if (index) {
             const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
-            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
             if (!left.value) return left
             const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
-            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
             return right
         }
         index = findFirstOp('|')
         if (index) {
             const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
-            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
             if (left.value) return left
             const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
-            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
+            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
             return right
         }
 
@@ -69,25 +69,25 @@ class Interpret {
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
 
-            if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED)
+            if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED, op.source)
 
             if (op.isUni) {
                 const a = this.executeExpressionPart(parts[index + 1])
-                if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT)
+                if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT, a.source)
                 parts[index] = op.apply(a)
                 parts = removeElementAt(parts, index + 1)
             } else 
             if (op.isBi) {
                 const a = this.executeExpressionPart(parts[index - 1])
                 const b = this.executeExpressionPart(parts[index + 1])
-                if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS)
-                if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+                if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, b.source)
+                if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, b.source)
                 parts[index] = op.apply(a, b)
                 parts = removeElementAt(parts, index - 1, index + 1)
             } else 
             if (op.isArrayAccess) {
                 const a = this.executeExpressionPart(parts[index - 1])
-                if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY)
+                if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY, a.source)
                 const indexes = op.indexes.map(i => this.executeExpressionPart(i))
                 parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
@@ -95,7 +95,7 @@ class Interpret {
             } else 
             if (op.isObjectAccess) {
                 const o = this.executeExpressionPart(parts[index - 1])
-                if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT)
+                if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT, o.source)
                 parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                 parts = removeElementAt(parts, index - 1)
                 assignApplied = true
@@ -106,10 +106,10 @@ class Interpret {
                 parts[index] = this.executeFunctionCall(f, params)
                 parts = removeElementAt(parts, index - 1)
             }
-            else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR)
+            else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR, op.source)
         }
 
-        if (assignNewValue && !assignApplied) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED)
+        if (assignNewValue && !assignApplied) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED, parts[0].source)
 
         return this.executeExpressionPart(parts[0]) // parts are reduced to a single result
 
@@ -142,9 +142,10 @@ class Interpret {
     }
 
     executeExpressionPart(expressionPart) {
-        this._stepper()
+        this._stepper(expressionPart.source)
+        
         if (expressionPart.isReference) {
-            if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.varName)
+            if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.source, expressionPart.varName)
             return this.variables.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
@@ -171,7 +172,7 @@ class Interpret {
             return f.call(...params)
         }
 
-        if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH)
+        if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH, f.source)
         // scoped variables
         let i = 0
         this.variables.pushScope()
@@ -193,7 +194,7 @@ class Interpret {
     }
 
     executeAssignemt(assignment) {
-        if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT)
+        if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT, assignment.source)
         const value = this.executeExpressionPart(assignment.right)
         if (assignment.left.isVariable) {
             this.variables.setVariable(assignment.left.name, value)
@@ -205,26 +206,26 @@ class Interpret {
     }
 
     executeWhile(whileStm) {
-        if (!whileStm.condition || !whileStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION)
+        if (!whileStm.condition || !whileStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION, whileStm.source)
         while (true) {
             const cond = this.executeExpressionPart(whileStm.condition)
-            if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE)
+            if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE, cond.source)
             if (cond.value) this.executeBlock(whileStm.body)
             else break
         } 
     }
 
     executeIf(ifStm) {
-        if (!ifStm.condition || !ifStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION)
+        if (!ifStm.condition || !ifStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION, ifStm.source)
         const cond = this.executeExpressionPart(ifStm.condition)
-        if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE)
+        if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE, cond.source)
         if (cond.value) this.executeBlock(ifStm.body)
         else if (ifStm.elseBody) this.executeBlock(ifStm.elseBody)
     }
 
-    _stepper() {
+    _stepper(source) {
         this.steps++
-        if (this.steps > this.maxSteps) throw new LangInterpretError(Errors.EXECUTION_STEPS_EXCEEDED)
+        if (this.steps > this.maxSteps) throw new LangInterpretError(Errors.EXECUTION_STEPS_EXCEEDED, source)
     }
 }
 

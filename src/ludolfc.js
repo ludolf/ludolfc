@@ -9,8 +9,18 @@ class LudolfC {
     }
 
     execute(code) {
-        const ast = this.parser.parse(code)
-        return this.interpret.execute(ast)
+        try {
+            const ast = this.parser.parse(code)
+            return this.interpret.execute(ast)
+
+        } catch (e) {
+            if (e.isLangError && (e.position || e.position === 0)) {
+                const {line, col} = lineAndCol(code, e.position)
+                e.line = line
+                e.col = col
+            }
+            throw e
+        }
     }
 
     hasVariable(name) {
@@ -20,6 +30,20 @@ class LudolfC {
     getVariable(name) {
         return this.interpret.variables.getVariable(name)
     }
+}
+
+function lineAndCol(code, position) {
+    let line = 1    // starting from 1
+    let col = 1
+    for (let i = 0; i < code.length && i <= position; i++) {
+        col++
+        if ('\n' === code[i]) {
+            line++
+            col = 1
+        }
+    }
+    col = Math.max(1, col - 1)
+    return {line, col}
 }
 
 module.exports = { LudolfC, lang }

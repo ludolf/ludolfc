@@ -1699,7 +1699,7 @@ test('parse if', () => {
   expect(ast.statements[0].condition.parts[0].value).toBe(true)
   expect(ast.statements[0].body.statements).toHaveLength(1)
   expect(ast.statements[0].body.statements[0].type).toBe('VOID')
-  expect(ast.statements[0].elseBody).not.toBeDefined()
+  expect(ast.statements[0].elseBody).toBeFalsy()
 })
 
 test('parse if else', () => {

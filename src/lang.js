@@ -57,48 +57,51 @@ const Types = {
 }
 
 class LangError extends Error {
-    constructor(id, arg1, arg2) {
+    constructor(id, pos, arg1, arg2) {
         super(id)
         this.message = `${id} ${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`
         this.id = id
         this.arg1 = arg1
         this.arg2 = arg2
+        this.position = pos
         this.isLangError = true
     }
 }
 
 class LangParseError extends LangError {
-    constructor(id, arg1, arg2) {
-        super(id, arg1, arg2)
+    constructor(id, pos, arg1, arg2) {
+        super(id, pos, arg1, arg2)
         this.isParseError = true
     }
 }
 
 class LangInterpretError extends LangError {
-    constructor(id, arg1, arg2) {
-        super(id, arg1, arg2)
+    constructor(id, pos, arg1, arg2) {
+        super(id, pos, arg1, arg2)
         this.isInterpretError = true
     }
 }
 
 class Block {
-    constructor(statements) {
+    constructor(statements, source) {
         this.statements = statements
+        this.source = source
     }
 }
 
 class Statement {
-    constructor() {
+    constructor(source) {
         this.isExpression = false
         this.isAssignment = false
         this.isWhile = false
         this.isIf = false
+        this.source = source
     }
 }
 
 class Assignment extends Statement {
-    constructor(left, right) {
-        super()
+    constructor(left, right, source) {
+        super(source)
         this.isAssignment = true
         this.left = left
         this.right = right
@@ -106,8 +109,8 @@ class Assignment extends Statement {
 }
 
 class While extends Statement {
-    constructor(condition, body) {
-        super()
+    constructor(condition, body, source) {
+        super(source)
         this.isWhile = true
         this.condition = condition
         this.body = body
@@ -115,8 +118,8 @@ class While extends Statement {
 }
 
 class If extends Statement {
-    constructor(condition, body, bodyElse) {
-        super()
+    constructor(condition, body, bodyElse, source) {
+        super(source)
         this.isIf = true
         this.condition = condition
         this.body = body
@@ -125,17 +128,18 @@ class If extends Statement {
 }
 
 class Expression extends Statement {
-    constructor(parts) {
-        super()
+    constructor(parts, source) {
+        super(source)
         this.isExpression = true
         this.parts = parts
     }
 }
 
 class Variable {
-    constructor(name) {
+    constructor(name, source) {
         this.isVariable = true
         this.name = name
+        this.source = source
     }
 }
 
@@ -148,10 +152,11 @@ class Operator {
 }
 
 class UniOperator extends Operator {
-    constructor(op) {
+    constructor(op, source) {
         super(op)
         this.isUni = true
         this.precedence = this.getPrecedence()
+        this.source = source
     }
     apply(a) {
         const fn = getFn(this.op)
@@ -176,10 +181,11 @@ class UniOperator extends Operator {
 }
 
 class BiOperator extends Operator {
-    constructor(op) {
+    constructor(op, source) {
         super(op)
         this.isBi = true
         this.precedence = this.getPrecedence()
+        this.source = source
     }
     apply(a, b) {
         const fn = getFn(this.op)
@@ -229,11 +235,12 @@ class BiOperator extends Operator {
 }
 
 class ArrayAccess extends Operator {
-    constructor(indexes) {
+    constructor(indexes, source) {
         super('[]', 17)
         this.isAccess = true
         this.isArrayAccess = true
         this.indexes = indexes
+        this.source = source
     }
     apply(a, indexes, newValue) { // indexes are resolved, but this.indexes are AST (expressions)
         return a.element(indexes, newValue)
@@ -241,11 +248,12 @@ class ArrayAccess extends Operator {
 }
 
 class ObjectAccess extends Operator {
-    constructor(attrName) {
+    constructor(attrName, source) {
         super('.', 17)
         this.isAccess = true
         this.isObjectAccess = true
         this.attrName = attrName
+        this.source = source
     }
     apply(o, newValue) {
         return o.attribute(this.attrName, newValue)
@@ -253,27 +261,30 @@ class ObjectAccess extends Operator {
 }
 
 class FunctionCall extends Operator {
-    constructor(params) {
+    constructor(params, source) {
         super('()', 17)
         this.isAccess = true
         this.isCall = true
         this.params = params
+        this.source = source
     }
 }
 
 class VarReference {
-    constructor(varName) {
+    constructor(varName, source) {
         this.isReference = true
         this.varName = varName
+        this.source = source
     }
 }
 
 class LangObject {
-    constructor(obj, type = Types.OBJECT) {
+    constructor(obj, source, type = Types.OBJECT) {
         this.value = obj
         this.type = type
         this.isObject = true
         this.parent = null
+        this.source = source
 
         this.eq = new LangNativeFunction(x => new LangBoolean(areObjectsEqual(this, x)))
         this.ne = new LangNativeFunction(x => new LangBoolean(!(this.eq.call(x).value)))
@@ -291,8 +302,8 @@ class LangObject {
 }
 
 class LangValueObject extends LangObject {
-    constructor(value, type) {
-        super(value, type)
+    constructor(value, source, type) {
+        super(value, source, type)
 
         this.eq = new LangNativeFunction(x => new LangBoolean(this.value === x.value))
         this.ne = new LangNativeFunction(x => new LangBoolean(this.value !== x.value))
@@ -300,8 +311,8 @@ class LangValueObject extends LangObject {
 }
 
 class LangNumber extends LangValueObject {
-    constructor(value) {
-        super(value, Types.NUMBER)
+    constructor(value, source) {
+        super(value, source, Types.NUMBER)
         
         this.mult = new LangNativeFunction(x => new LangNumber(this.value * x.value))
         this.div = new LangNativeFunction(x => new LangNumber(this.value / x.value))
@@ -318,8 +329,8 @@ class LangNumber extends LangValueObject {
 }
 
 class LangString extends LangValueObject {
-    constructor(value) {
-        super(value, Types.STRING)
+    constructor(value, source) {
+        super(value, source, Types.STRING)
 
         this.concat = new LangNativeFunction(x => new LangString(this.value + x.value))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
@@ -330,8 +341,8 @@ class LangString extends LangValueObject {
 }
 
 class LangBoolean extends LangValueObject {
-    constructor(value) {
-        super(value, Types.BOOLEAN)
+    constructor(value, source) {
+        super(value, source, Types.BOOLEAN)
 
         this.and = new LangNativeFunction(x => new LangBoolean(this.value && x.value))
         this.or = new LangNativeFunction(x => new LangBoolean(this.value || x.value))
@@ -345,8 +356,8 @@ class LangBoolean extends LangValueObject {
 }
 
 class LangArray extends LangValueObject {
-    constructor(value) {
-        super(value, Types.ARRAY)
+    constructor(value, source) {
+        super(value, source, Types.ARRAY)
 
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
 
@@ -385,34 +396,37 @@ class LangArray extends LangValueObject {
     }
 }
 
+class LangVoid extends LangValueObject {
+    constructor(source) {
+        super(null, source, Types.VOID)
+
+        this.eq = new LangNativeFunction(x => new LangBoolean(false))
+        this.ne = new LangNativeFunction(x => new LangBoolean(false))
+    }
+}
+
 class LangFunction {
-    constructor(body, args) {
+    constructor(body, args, source) {
         this.type = Types.FUNCTION
         this.body = body
         this.args = args
         this.isFunction = true
+        this.source = source
+
         this.eq = new LangNativeFunction(x => new LangBoolean(false))
         this.ne = new LangNativeFunction(x => new LangBoolean(true))
     }
 }
 
 class LangNativeFunction {
-    constructor(func) {
+    constructor(func, source) {
         this.type = Types.FUNCTION
         this.func = func
         this.isNative = true
+        this.source = source
     }
     call(...params) {
         return this.func(...params)
-    }
-}
-
-class LangVoid extends LangValueObject {
-    constructor() {
-        super(null, Types.VOID)
-
-        this.eq = new LangNativeFunction(x => new LangBoolean(false))
-        this.ne = new LangNativeFunction(x => new LangBoolean(false))
     }
 }
 
