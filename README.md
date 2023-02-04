@@ -288,5 +288,5 @@ oo := (o){o}
 
 ## Build
 ```
-npx webpack --mode=production
+npm run build
 ```
