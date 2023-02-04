@@ -11,7 +11,7 @@
         h1 { font-size: 2rem; }
         #code { font-size: 1.2rem; width: 100%; padding: 1rem; background-color: beige; box-sizing: border-box; }
         #run { font-size: 1.5rem; font-weight: bold; padding: 0.5em 3em; }
-        #result { font-size: 2rem; color: blue; }
+        #result { font-size: 1.5rem; color: blue; }
         .error { color: red !important; }
         @media (max-width: 600px) {
             body { margin: 1rem; }
@@ -67,7 +67,8 @@ insertionSort([8,5,6,3,2,1,7,9,4])
                 console.error(e)
                 if (!resultPre.classList.contains('error')) resultPre.classList.add('error')
                 if (e.isLangError) {
-                    resultPre.innerHTML = (e.isParseError ? 'PARSE' : '') + ' ERROR: ' + e.message
+                    resultPre.innerHTML = (e.isParseError ? 'PARSE ' : '') + 'ERROR ' 
+                        + '(ln ' + e.line + ', col ' + e.col + '): ' + e.message
                 } else {
                     resultPre.innerHTML = 'ERROR ' + e
                 }                
