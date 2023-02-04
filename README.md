@@ -1,14 +1,10 @@
 
 # LudolfC Programming Language
 
-LudolfC is a simple programming language for learning concepts of structured, 
-    object-oriented and functional programming.
-
 <img src="logo.svg" style="width: 20rem; float: right;" align="right">
 
-```
-npm i ludolfc
-```
+LudolfC is a simple programming language for learning concepts of structured, 
+    object-oriented and functional programming.
 
 ## Language
 
@@ -234,6 +230,10 @@ obj.f()
 ## Interpreter
 
 LudolfC comes along with a JavaScript interpreter:
+
+```
+npm i ludolfc
+```
 
 ```
 import {LudolfC, lang} from 'ludolfc'
