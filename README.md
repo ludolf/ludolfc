@@ -6,7 +6,7 @@ LudolfC is a simple programming language for learning concepts of structured,
 
 <img src="logo.svg" style="width: 20rem; float: right;" align="right">
 
-## Language Syntax
+## Language Overview
 
 ### Assignment
 ```
