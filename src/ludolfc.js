@@ -3,15 +3,24 @@ const Parser = require('./parser')
 const Interpret = require('./interpret')
 
 class LudolfC {
-    constructor(imports = {}) {
+    /**
+     * @param {object} imports 
+     * @param {isInterrupted: () => boolean} controls 
+     */
+    constructor(imports = {}, controls = {}) {
         this.parser = new Parser()
-        this.interpret = new Interpret(imports)
+        this.interpret = new Interpret(imports, controls)
     }
 
-    execute(code) {
+    /**
+     * Execute LudolfC code.
+     * @param {string} code 
+     * @returns result of the execution
+     */
+    async execute(code) {
         try {
             const ast = this.parser.parse(code)
-            return this.interpret.execute(ast)
+            return await this.interpret.execute(ast)
 
         } catch (e) {
             if (e.isLangError && (e.position || e.position === 0)) {

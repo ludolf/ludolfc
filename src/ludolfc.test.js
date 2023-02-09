@@ -4,8 +4,8 @@ const ludolfC = new LudolfC({
   Math: new lang.Object({floor: new lang.NativeFunction(x => new lang.Number(Math.floor(x.value)))})
 })
 
-test('eight times zero', () => {
-  ludolfC.execute(fs.readFileSync('./test/eight.lc'))
+test('eight times zero', async () => {
+  await ludolfC.execute(fs.readFileSync('./test/eight.lc'))
   expect(ludolfC.hasVariable('o')).toBe(true)
   expect(ludolfC.getVariable('o').type).toBe('NUMBER')
   expect(ludolfC.getVariable('o').value).toBe(0)
@@ -39,8 +39,8 @@ test('eight times zero', () => {
   expect(ludolfC.getVariable('_9').value).toBe(-1)
 })
 
-test('bubblesort', () => {
-  ludolfC.execute(fs.readFileSync('./test/bubblesort.lc'))
+test('bubblesort', async () => {
+  await ludolfC.execute(fs.readFileSync('./test/bubblesort.lc'))
   expect(ludolfC.hasVariable('inputArr')).toBe(true)
   expect(ludolfC.hasVariable('_0')).toBe(true)
   expect(ludolfC.getVariable('_0').type).toBe('NUMBER')
@@ -71,8 +71,8 @@ test('bubblesort', () => {
   expect(ludolfC.getVariable('_8').value).toBe(9)
 })
 
-test('insertionsort', () => {
-  const result = ludolfC.execute(fs.readFileSync('./test/insertionsort.lc'))
+test('insertionsort', async () => {
+  const result = await ludolfC.execute(fs.readFileSync('./test/insertionsort.lc'))
   expect(ludolfC.hasVariable('arr')).toBe(false)
   expect(result.type).toBe('ARRAY')
   expect(result.value).toHaveLength(9)
@@ -96,8 +96,8 @@ test('insertionsort', () => {
   expect(result.value[8].value).toBe(9)
 })
 
-test('factorial', () => {
-  ludolfC.execute(fs.readFileSync('./test/factorial.lc'))
+test('factorial', async () => {
+  await ludolfC.execute(fs.readFileSync('./test/factorial.lc'))
   expect(ludolfC.hasVariable('factorial1')).toBe(true)
   expect(ludolfC.hasVariable('factorial2')).toBe(true)
   expect(ludolfC.getVariable('_1_0').value).toBe(1)
@@ -108,14 +108,14 @@ test('factorial', () => {
   expect(ludolfC.getVariable('_2_5').value).toBe(120)
 })
 
-test('binarySearch', () => {
-  ludolfC.execute(fs.readFileSync('./test/binarysearch.lc'))
+test('binarySearch', async () => {
+  await ludolfC.execute(fs.readFileSync('./test/binarysearch.lc'))
   expect(ludolfC.hasVariable('binarySearch')).toBe(true)
   expect(ludolfC.getVariable('_10').value).toBe(3)
 })
 
-test('source #1', () => {
-  ludolfC.execute(fs.readFileSync('./test/source1.lc'))
+test('source #1', async () => {
+  await ludolfC.execute(fs.readFileSync('./test/source1.lc'))
   expect(ludolfC.getVariable('a1').value).toBe(6)
   expect(ludolfC.getVariable('a2').value).toBe(12.345)
   expect(ludolfC.getVariable('a3').value).toBe(14.345)

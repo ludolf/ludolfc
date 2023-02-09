@@ -1,65 +1,66 @@
 const { 
     Types,
     Errors,
+    Interruptions,
     InterpretError: LangInterpretError,
+    Interrupt: LangInterrupt,
     Void: LangVoid } = require('./lang')
 
 class Interpret {
-    constructor(imports = {}) {
+    constructor(imports = {}, controls, maxSteps = 100000) {
         this.variables = new VariablesScope(imports)
-        this.steps = 0
-        this.maxSteps = 100000 // to prevent infinite loops
+        this.stepper = new ExecutionStepper(maxSteps, controls && controls.isInterrupted) // to prevent infinite loops
     }
 
-    execute(ast) {
+    async execute(ast) {
         this.variables.clear()
-        this.steps = 0
-        return this.executeBlock(ast, false)
+        this.stepper.reset()
+        return await this.executeBlock(ast, false)
     }
 
-    executeBlock(block, newScope = true) {        
+    async executeBlock(block, newScope = true) {        
         if (newScope) this.variables.pushScope()
         let result
         for (let stm of block.statements) {
-            result = this.executeStatement(stm)
+            result = await this.executeStatement(stm)
         }
         if (newScope) this.variables.popScope()
         return result ? result : new LangVoid()
     }
 
-    executeStatement(stm) {
-        this._stepper(stm.source)
-        return stm.isExpression ? this.executeExpression(stm) :
-               stm.isAssignment ? this.executeAssignemt(stm) :
-               stm.isWhile ? this.executeWhile(stm) :
-               stm.isIf ? this.executeIf(stm) : 
+    async executeStatement(stm) {
+        this.stepper.step(stm.source)
+        return stm.isExpression ? await this.executeExpression(stm) :
+               stm.isAssignment ? await this.executeAssignment(stm) :
+               stm.isWhile ? await this.executeWhile(stm) :
+               stm.isIf ? await this.executeIf(stm) : 
                stm
     }
 
-    executeExpression(expression, assignNewValue = null) {
-        this._stepper(expression.source)
+    async executeExpression(expression, assignNewValue = null) {
+        this.stepper.step(expression.source)
         if (!expression.parts) throw new LangInterpretError(Errors.EMPTY_EXPRESSION, expression.source)
         let parts = [...expression.parts]
-        return this.executeExpressionParts(parts, assignNewValue)
+        return await this.executeExpressionParts(parts, assignNewValue)
     }
 
-    executeExpressionParts(parts, assignNewValue = null) {
+    async executeExpressionParts(parts, assignNewValue = null) {
         // logical operators short circuit
         let index = findFirstOp('&')
         if (index) {
-            const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
+            const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
             if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
             if (!left.value) return left
-            const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
+            const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
             if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
             return right
         }
         index = findFirstOp('|')
         if (index) {
-            const left = this.executeExpressionParts(parts.slice(0, index), assignNewValue)
+            const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
             if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
             if (left.value) return left
-            const right = this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
+            const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
             if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
             return right
         }
@@ -71,47 +72,61 @@ class Interpret {
 
             if (assignNewValue && !op.isObjectAccess && !op.isArrayAccess) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED, op.source)
 
-            if (op.isUni) {
-                const a = this.executeExpressionPart(parts[index + 1])
-                if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT, a.source)
-                parts[index] = op.apply(a)
-                parts = removeElementAt(parts, index + 1)
-            } else 
-            if (op.isBi) {
-                const a = this.executeExpressionPart(parts[index - 1])
-                const b = this.executeExpressionPart(parts[index + 1])
-                if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, b.source)
-                if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, b.source)
-                parts[index] = op.apply(a, b)
-                parts = removeElementAt(parts, index - 1, index + 1)
-            } else 
-            if (op.isArrayAccess) {
-                const a = this.executeExpressionPart(parts[index - 1])
-                if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY, a.source)
-                const indexes = op.indexes.map(i => this.executeExpressionPart(i))
-                parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
-                parts = removeElementAt(parts, index - 1)
-                assignApplied = true
-            } else 
-            if (op.isObjectAccess) {
-                const o = this.executeExpressionPart(parts[index - 1])
-                if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT, o.source)
-                parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
-                parts = removeElementAt(parts, index - 1)
-                assignApplied = true
-            } else 
-            if (op.isCall) {
-                const f = this.executeExpressionPart(parts[index - 1])
-                const params = op.params.map(p => this.executeExpressionPart(p))
-                parts[index] = this.executeFunctionCall(f, params)
-                parts = removeElementAt(parts, index - 1)
+            try {
+                if (op.isUni) {
+                    const a = await this.executeExpressionPart(parts[index + 1])
+                    if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT, op.source)
+                    parts[index] = op.apply(a)
+                    parts = removeElementAt(parts, index + 1)
+                } else 
+                if (op.isBi) {
+                    const a = await this.executeExpressionPart(parts[index - 1])
+                    const b = await this.executeExpressionPart(parts[index + 1])
+                    if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, op.source)
+                    if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, op.source)
+                    parts[index] = op.apply(a, b)
+                    parts = removeElementAt(parts, index - 1, index + 1)
+                } else 
+                if (op.isArrayAccess) {
+                    const a = await this.executeExpressionPart(parts[index - 1])
+                    if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY, op.source)
+                    if (assignNewValue && a.protected()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
+                    const indexes = await Promise.all(op.indexes.map(i => this.executeExpressionPart(i)))
+                    parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
+                    if (!parts[index]) throw new LangInterpretError(Errors.ATTRIBUTE_NOT_FOUND, op.source)
+                    parts = removeElementAt(parts, index - 1)
+                    assignApplied = true
+                } else 
+                if (op.isObjectAccess) {
+                    const o = await this.executeExpressionPart(parts[index - 1])
+                    if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT, op.source)
+                    if (assignNewValue && o.protected()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
+                    parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
+                    if (!parts[index]) throw new LangInterpretError(Errors.ATTRIBUTE_NOT_FOUND, op.source)
+                    parts = removeElementAt(parts, index - 1)
+                    assignApplied = true
+                } else 
+                if (op.isCall) {
+                    const f = await this.executeExpressionPart(parts[index - 1])
+                    const params = await Promise.all(op.params.map(p => this.executeExpressionPart(p)))
+                    parts[index] = await this.executeFunctionCall(f, params)
+                    parts = removeElementAt(parts, index - 1)
+                }
+                else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR, op.source)
+
+            } catch (e) {   // LangError could be raised from applying the operator in lang.js
+                if (e.isLangError) {
+                    if (!e.isInterpretError) throw new LangInterpretError(e.id, op.source, e.arg1, e.arg2)
+                } else {
+                    throw new LangInterpretError(Errors.UNKNOWN_ERROR, op.source, e)
+                }
+                throw e
             }
-            else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR, op.source)
         }
 
         if (assignNewValue && !assignApplied) throw new LangInterpretError(Errors.ACCESS_OPERATOR_EXPECTED, parts[0].source)
 
-        return this.executeExpressionPart(parts[0]) // parts are reduced to a single result
+        return await this.executeExpressionPart(parts[0]) // parts are reduced to a single result
 
         function findNextOp() { // returns an index of the next part
             let index = -1
@@ -141,35 +156,36 @@ class Interpret {
         }
     }
 
-    executeExpressionPart(expressionPart) {
-        this._stepper(expressionPart.source)
+    async executeExpressionPart(expressionPart) {
+        this.stepper.step(expressionPart.source)
         
         if (expressionPart.isReference) {
-            if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.source, expressionPart.varName)
+            if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.source - expressionPart.varName.length, expressionPart.varName)
             return this.variables.getVariable(expressionPart.varName)
         }
         if (expressionPart.isExpression) {
-            return this.executeExpression(expressionPart)
+            return await this.executeExpression(expressionPart)
         }
         if (Types.ARRAY === expressionPart.type) {
             const arr = expressionPart.value
             for (let i = 0; i < arr.length; i++) {
-                arr[i] = this.executeExpressionPart(arr[i])
+                arr[i] = await this.executeExpressionPart(arr[i])
             }
         } else
         if (Types.OBJECT === expressionPart.type) {
             const obj = expressionPart.value
             for (let k of Object.keys(obj)) {
-                obj[k] = this.executeExpressionPart(obj[k])
+                obj[k] = await this.executeExpressionPart(obj[k])
                 if (obj[k].isObject || obj[k].isFunction) obj[k].parent = expressionPart
             }
         }
         return expressionPart
     }
 
-    executeFunctionCall(f, params) {
+    async executeFunctionCall(f, params) {
         if (f.isNative) {
-            return f.call(...params)
+            const result = await f.call(...params)
+            return !result ? new LangVoid() : result
         }
 
         if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH, f.source)
@@ -185,7 +201,7 @@ class Interpret {
         }
         
         try {
-            const result = this.executeBlock(f.body, false)
+            const result = await this.executeBlock(f.body, false)
             return result
 
         } finally {  // clean up variables
@@ -193,39 +209,38 @@ class Interpret {
         }
     }
 
-    executeAssignemt(assignment) {
+    async executeAssignment(assignment) {
         if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT, assignment.source)
-        const value = this.executeExpressionPart(assignment.right)
+        const value = await this.executeExpressionPart(assignment.right)        
+        // variable assignment
         if (assignment.left.isVariable) {
+            const variable = this.variables.getVariable(assignment.left.name)
+            if (variable.protected && variable.protected()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, assignment.left.source)
             this.variables.setVariable(assignment.left.name, value)
         } else
+        // object attribute or array element assignment
         if (assignment.left.isExpression) {
-            this.executeExpression(assignment.left, value)
+            await this.executeExpression(assignment.left, value)
         }
         else throw new LangInterpretError(Errors.WRONG_ASSIGNEE_TYPE)
     }
 
-    executeWhile(whileStm) {
+    async executeWhile(whileStm) {
         if (!whileStm.condition || !whileStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION, whileStm.source)
         while (true) {
-            const cond = this.executeExpressionPart(whileStm.condition)
+            const cond = await this.executeExpressionPart(whileStm.condition)
             if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE, cond.source)
-            if (cond.value) this.executeBlock(whileStm.body)
+            if (cond.value) await this.executeBlock(whileStm.body)
             else break
         } 
     }
 
-    executeIf(ifStm) {
+    async executeIf(ifStm) {
         if (!ifStm.condition || !ifStm.condition.isExpression) throw new LangInterpretError(Errors.WRONG_CONDITION, ifStm.source)
-        const cond = this.executeExpressionPart(ifStm.condition)
+        const cond = await this.executeExpressionPart(ifStm.condition)
         if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE, cond.source)
-        if (cond.value) this.executeBlock(ifStm.body)
-        else if (ifStm.elseBody) this.executeBlock(ifStm.elseBody)
-    }
-
-    _stepper(source) {
-        this.steps++
-        if (this.steps > this.maxSteps) throw new LangInterpretError(Errors.EXECUTION_STEPS_EXCEEDED, source)
+        if (cond.value) await this.executeBlock(ifStm.body)
+        else if (ifStm.elseBody) await this.executeBlock(ifStm.elseBody)
     }
 }
 
@@ -275,7 +290,10 @@ class VariablesScope {
                 break
             }
         }
-        if (!found) this.variables[this.variables.length - 1].set(name, value)
+        if (!found) {
+            if (!this.variables.length) this.clear()
+            this.variables[this.variables.length - 1].set(name, value)
+        }
     }
 
     pushScope() {
@@ -285,7 +303,25 @@ class VariablesScope {
     popScope() {
         this.variables.pop()
     }
+}
 
+class ExecutionStepper {
+    constructor(maxSteps, isInterruptedFn) {
+        this.maxSteps = maxSteps
+        this.isInterruptedFn = isInterruptedFn
+        this.steps = 0        
+    }
+
+    step(source) {
+        if (this.isInterruptedFn && this.isInterruptedFn()) throw new LangInterrupt(Interruptions.USER_SUSSPEND)
+        this.steps++
+        if (this.steps > this.maxSteps) throw new LangInterpretError(Errors.EXECUTION_STEPS_EXCEEDED, source)
+    }
+
+    reset(maxSteps = null) {
+        this.steps = 0
+        if (maxSteps) this.maxSteps = maxSteps
+    }
 }
 
 module.exports = Interpret

@@ -1,6 +1,6 @@
 {
   "name": "ludolfc",
-  "version": "0.0.0-alpha1",
+  "version": "0.0.0-alpha2",
   "description": "LudolfC programming language",
   "main": "./dist/ludolfc.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "kids"
   ],
   "author": "Tomas Tulka (ttulka)",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/ludolf/ludolfc/issues"
   },
@@ -31,6 +31,7 @@
   ],
   "devDependencies": {
     "jest": "^29.3.1",
+    "source-map-loader": "^4.0.1",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1"
   }

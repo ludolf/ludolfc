@@ -358,7 +358,7 @@ class Parser {
                 const next2 = source.remaining(2)
                 if (BiOperators.includes(next2)) {
                     parts.push(new BiOperator(next2, source.absPos()))
-                    source.move(2)
+                    source.move(next2.length)
                     continue
                 }
                 if (BiOperators.includes(c)) {
@@ -412,7 +412,7 @@ class Parser {
                 if (isIdentifier(token) || '$' === token) {
                     return new VarReference(token, source.absPos())
                 }
-                throw new LangParseError(Errors.UNREFERENCED_VARIABLE, source.absPos(), token)                
+                throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.absPos(), token)
             }
 
             if (isStringStarting(c)) {

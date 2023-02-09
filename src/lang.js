@@ -22,12 +22,13 @@ const Errors = {
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
     EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
     EXPEXTED_STATEMENT_END: 'EXPEXTED_STATEMENT_END',
-    ATTRIBUTE_NOT_EXISTS: 'ATTRIBUTE_NOT_EXISTS',
     ARRAY_INDEX_NOT_NUMBER: 'ARRAY_INDEX_NOT_NUMBER',
     ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
     ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
     FUNC_ARGUMENTS_MISHMASH: 'FUNC_ARGUMENTS_MISHMASH',
     ATTRIBUTE_ALREADY_EXISTS: 'ATTRIBUTE_ALREADY_EXISTS',
+    ATTRIBUTE_NOT_FOUND: 'ATTRIBUTE_NOT_FOUND',
+    ELEMENT_NOT_FOUND: 'ELEMENT_NOT_FOUND',
     EMPTY_EXPRESSION: 'EMPTY_EXPRESSION',
     UNKNOWN_OPERATOR: 'UNKNOWN_OPERATOR',
     OPERATOR_NOT_APPLICABLE: 'OPERATOR_NOT_APPLICABLE',
@@ -37,6 +38,7 @@ const Errors = {
     UNMATCHING_BI_OPERATOR_SUBJECTS: 'UNMATCHING_BI_OPERATOR_SUBJECTS',
     EXPECTED_ARRAY: 'EXPECTED_ARRAY',
     EXPECTED_OBJECT: 'EXPECTED_OBJECT',
+    EXPECTED_IDENTIFIER: 'EXPECTED_IDENTIFIER',
     WRONG_ASSIGNMENT: 'WRONG_ASSIGNMENT',
     WRONG_ASSIGNEE_TYPE: 'WRONG_ASSIGNEE_TYPE',
     READONLY_ATTRIBUTE: 'READONLY_ATTRIBUTE',
@@ -44,6 +46,9 @@ const Errors = {
     WRONG_CONDITION_VALUE: 'WRONG_CONDITION_VALUE',
     EXECUTION_STEPS_EXCEEDED: 'EXECUTION_STEPS_EXCEEDED',
     PARSER_STEPS_EXCEEDED: 'PARSER_STEPS_EXCEEDED',
+    PROTECTED_FROM_MODIFICATION: 'PROTECTED_FROM_MODIFICATION',
+    DIVISION_BY_ZERO: 'DIVISION_BY_ZERO',
+    UNKNOWN_ERROR: 'UNKNOWN_ERROR',
 }
 
 const Types = {
@@ -54,6 +59,17 @@ const Types = {
     OBJECT: 'OBJECT',
     FUNCTION: 'FUNCTION',
     VOID: 'VOID',
+}
+
+const Interruptions = {
+    USER_SUSSPEND: 'USER_SUSSPEND',
+}
+
+class LangInterrupt {
+    constructor(id) {
+        this.id = id
+        this.isLangInterruption = true
+    }
 }
 
 class LangError extends Error {
@@ -160,14 +176,14 @@ class UniOperator extends Operator {
     }
     apply(a) {
         const fn = getFn(this.op)
-        if (!fn || !fn.call) throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, this.op)
+        if (!fn || !fn.call) throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, null, this.op)
         return fn.call()
 
         function getFn(op) {
             switch (op) {
                 case '!': 
                 case '-': return a.neg
-                default: throw new LangError(Errors.INVALID_UNI_OPERATOR, this.op)
+                default: throw new LangError(Errors.INVALID_UNI_OPERATOR, null, this.op)
             }
         }
     }
@@ -191,7 +207,10 @@ class BiOperator extends Operator {
         const fn = getFn(this.op)
         if (!fn || !fn.call) {
             if ('=' === this.op) return new LangBoolean(false)
-            throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, this.op)
+            throw new LangError(Errors.OPERATOR_NOT_APPLICABLE, null, this.op)
+        }
+        if ('/' === this.op && Types.NUMBER === b.type && b.value === 0) {
+            throw new LangError(Errors.DIVISION_BY_ZERO, null, this.op)
         }
         return fn.call(b)
 
@@ -210,7 +229,7 @@ class BiOperator extends Operator {
                 case '!=': return a.ne
                 case '&': return a.and
                 case '|': return a.or
-                default: throw new LangError(Errors.INVALID_BI_OPERATOR, this.op)
+                default: throw new LangError(Errors.INVALID_BI_OPERATOR, null, this.op)
             }
         }
     }
@@ -298,6 +317,9 @@ class LangObject {
     hasAttribute(name) {
         const hasValue = this[name] || this.value[name]
         return hasValue || (this.parent && this.parent.hasAttribute(name))
+    }
+    protected() {
+        return this.isProtected || (this.parent && this.parent.protected())
     }
 }
 
@@ -443,6 +465,7 @@ function areObjectsEqual(a, b) {
 module.exports = {
     Keywords,
     Errors,
+    Interruptions,
     Types,
     SizeKeywords,
     WhileKeywords,
@@ -462,6 +485,7 @@ module.exports = {
     VarReference,
     ParseError: LangParseError,
     InterpretError: LangInterpretError,
+    Interrupt: LangInterrupt,
     Object: LangObject,
     Number: LangNumber,
     String: LangString,

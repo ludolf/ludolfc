@@ -58,12 +58,16 @@ insertionSort([8,5,6,3,2,1,7,9,4])
         
         var codeTextarea = document.getElementById('code')
         var resultPre = document.getElementById('result')
-        document.getElementById('run').addEventListener('click', () => {
+        document.getElementById('run').addEventListener('click', async () => {
             try {
-                var result = ludolfC.execute(codeTextarea.value)
+                var result = await ludolfC.execute(codeTextarea.value)
                 if (resultPre.classList.contains('error')) resultPre.classList.remove('error')
                 resultPre.innerHTML = stringify(result)
             } catch (e) {
+                if (e.isLangInterruption) {
+                    resultPre.innerHTML = 'INTERRUPTED'
+                    return
+                }
                 console.error(e)
                 if (!resultPre.classList.contains('error')) resultPre.classList.add('error')
                 if (e.isLangError) {
@@ -80,7 +84,7 @@ insertionSort([8,5,6,3,2,1,7,9,4])
                    'ARRAY' === obj.type ? '[' + obj.value.map(stringify) + ']' :
                    'OBJECT' === obj.type ? '{' + Object.keys(obj.value).map(k => k + ':' + stringify(obj.value[k])) + '}' :
                    'BOOLEAN' === obj.type ? stringify(obj.value) :
-                   obj.value ? stringify(obj.value) : 
+                   (obj.value !== null && obj.value !== undefined) ? stringify(obj.value) : 
                    obj.isFunction ? '[function]' : JSON.stringify(obj)
         }
     </script>

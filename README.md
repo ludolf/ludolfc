@@ -18,7 +18,7 @@ A varible name must not start with a digit.
 
 Unicode characters `ěščřžťďýáíéúůüöäñĚŠČŘŽŤĎÝÁÍÉÚŮÜÖÄÑß` are allowed.
 
-Variable names are case-insensitive.
+Variable names are case-sensitive.
 
 ### Data types
 
@@ -290,3 +290,7 @@ oo := (o){o}
 ```
 npm run build
 ```
+
+## License
+
+[GPL-3.0](LICENSE)
