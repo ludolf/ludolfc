@@ -225,6 +225,9 @@ obj.f()
 ```
 
 ### Keywords
+
+All keywords are case-insensitive!
+
 `true`, `false`, `if`, `else`, `while`
 
 ## Interpreter

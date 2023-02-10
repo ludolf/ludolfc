@@ -3,7 +3,7 @@ const Keywords = {
     FALSE: ['false', 'nepravda', 'unwahr'],
     IF: ['if', 'pokud', 'falls'],
     ELSE: ['else', 'jinak', 'sonst'],
-    WHILE: ['while', 'dokud', 'soweit'],
+    WHILE: ['while', 'dokud', 'solange'],
 }
 const SizeKeywords = ['size', 'velikost', 'größe']
 const WhileKeywords = ['while', 'dokud', 'solange']
