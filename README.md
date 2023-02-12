@@ -172,7 +172,7 @@ identity := (x){x}
 one := identity(1)
 
 addition := (x,y){ x + y }
-three := fn(1,2)
+three := addition(1,2)
 ```
 
 Variables created inside a function are scoped to the life time of that 
