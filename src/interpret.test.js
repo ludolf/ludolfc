@@ -1389,3 +1389,94 @@ test('interpret short circuit #6', async () => {
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(false)
 })
+
+test('interpret number round', async () => {
+  const ast = parser.parse('1.5.round()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret number round #2', async () => {
+  const ast = parser.parse('1.4.round()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number round #3', async () => {
+  const ast = parser.parse('a := 1.5\na.round()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret number round #4', async () => {
+  const ast = parser.parse('a := 1.4\na.round()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number round #5', async () => {
+  const ast = parser.parse('1.round()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number floor', async () => {
+  const ast = parser.parse('1.5.floor()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number floor #2', async () => {
+  const ast = parser.parse('1.floor()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number floor #3', async () => {
+  const ast = parser.parse('a := 1.8\na.floor()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number ceil', async () => {
+  const ast = parser.parse('1.2.ceil()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret number ceil #2', async () => {
+  const ast = parser.parse('1.ceil()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret number ceil #3', async () => {
+  const ast = parser.parse('a := 1.2\na.ceil()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret function object operation ne', async () => {
+  const ast = parser.parse('(){}.ne((){})')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)  // always true
+})
+
+test('interpret function object operation eq', async () => {
+  const ast = parser.parse('(){}.eq((){})')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)  // always false
+})

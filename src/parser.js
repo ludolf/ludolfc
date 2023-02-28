@@ -1,9 +1,6 @@
 const { 
     Errors,
     Keywords,
-    WhileKeywords,
-    IfKeywords,
-    ElseKeywords,
     Block,
     Assignment,
     While,
@@ -150,7 +147,7 @@ class Parser {
                 consumeUntil(source, '\\s')
                 const def = this.parseWhile(source)
                 consumeSpaces(source, true)
-                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                 return def
             }
 
@@ -169,7 +166,7 @@ class Parser {
                     def.elseBody = this.parseBody(source)
                     consumeSpaces(source, true)
                 }
-                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                 if (!def.elseBody) {
                     consumeSpaces(source)
                     if (isElseDef(source.remaining())) {
@@ -177,7 +174,7 @@ class Parser {
                         consumeUntil(source, '\\s')
                         def.elseBody = this.parseBody(source)
                         consumeSpaces(source, true)
-                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                     }
                 }
                 return def
@@ -634,7 +631,7 @@ function isNumeric(str) {
 
 function isKeyword(str) {
     str = str.toLowerCase()
-    return Object.values(Keywords).some(k => k.includes(str)) ||  WhileKeywords.includes(str) || IfKeywords.includes(str)
+    return Object.values(Keywords).some(k => k.includes(str)) ||  Keywords.WHILE.includes(str) || Keywords.IF.includes(str)
 }
 
 function isSpace(c) {
@@ -669,15 +666,15 @@ function isFunctionDef(remaining) {
 }
 
 function isWhileDef(remaining) {
-    return WhileKeywords.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
+    return Keywords.WHILE.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
 }
 
 function isIfDef(remaining) {
-    return IfKeywords.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
+    return Keywords.IF.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining))
 }
 
 function isElseDef(remaining) {
-    return ElseKeywords.some(k => new RegExp(`^\\s*${k}\\s+{`).test(remaining)) 
+    return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+{`).test(remaining)) 
 }
 
 function isComment(remaining) {

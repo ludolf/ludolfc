@@ -375,8 +375,8 @@ const Errors = {
     UNEXPEXTED_KEYWORD: 'UNEXPEXTED_KEYWORD',
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
-    EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
-    EXPEXTED_STATEMENT_END: 'EXPEXTED_STATEMENT_END',
+    EXPECTED_FUNCTION: 'EXPECTED_FUNCTION',
+    EXPECTED_STATEMENT_END: 'EXPECTED_STATEMENT_END',
     ARRAY_INDEX_NOT_NUMBER: 'ARRAY_INDEX_NOT_NUMBER',
     ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
     ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
@@ -1079,7 +1079,7 @@ class Parser {
                 consumeUntil(source, '\\s')
                 const def = this.parseWhile(source)
                 consumeSpaces(source, true)
-                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                 return def
             }
 
@@ -1098,7 +1098,7 @@ class Parser {
                     def.elseBody = this.parseBody(source)
                     consumeSpaces(source, true)
                 }
-                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                 if (!def.elseBody) {
                     consumeSpaces(source)
                     if (isElseDef(source.remaining())) {
@@ -1106,7 +1106,7 @@ class Parser {
                         consumeUntil(source, '\\s')
                         def.elseBody = this.parseBody(source)
                         consumeSpaces(source, true)
-                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPEXTED_STATEMENT_END, source.absPos())
+                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
                     }
                 }
                 return def

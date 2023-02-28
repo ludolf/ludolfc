@@ -78,7 +78,7 @@ class Interpret {
                     if (!a.type) throw new LangInterpretError(Errors.WRONG_UNI_OPERATOR_SUBJECT, op.source)
                     parts[index] = op.apply(a)
                     parts = removeElementAt(parts, index + 1)
-                } else 
+                } else
                 if (op.isBi) {
                     const a = await this.executeExpressionPart(parts[index - 1])
                     const b = await this.executeExpressionPart(parts[index + 1])
@@ -86,21 +86,21 @@ class Interpret {
                     if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, op.source)
                     parts[index] = op.apply(a, b)
                     parts = removeElementAt(parts, index - 1, index + 1)
-                } else 
+                } else
                 if (op.isArrayAccess) {
                     const a = await this.executeExpressionPart(parts[index - 1])
                     if (Types.ARRAY !== a.type) throw new LangInterpretError(Errors.EXPECTED_ARRAY, op.source)
-                    if (assignNewValue && a.protected()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
+                    if (assignNewValue && a.protectedAttributes()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
                     const indexes = await Promise.all(op.indexes.map(i => this.executeExpressionPart(i)))
                     parts[index] = op.apply(a, indexes, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                     if (!parts[index]) throw new LangInterpretError(Errors.ATTRIBUTE_NOT_FOUND, op.source)
                     parts = removeElementAt(parts, index - 1)
                     assignApplied = true
-                } else 
+                } else
                 if (op.isObjectAccess) {
                     const o = await this.executeExpressionPart(parts[index - 1])
-                    if (!o.isObject) throw new LangInterpretError(Errors.EXPECTED_OBJECT, op.source)
-                    if (assignNewValue && o.protected()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
+                    if (!o.isObject && !o.isFunction) throw new LangInterpretError(Errors.EXPECTED_OBJECT, op.source)
+                    if (assignNewValue && o.protectedAttributes()) throw new LangInterpretError(Errors.PROTECTED_FROM_MODIFICATION, op.source)
                     parts[index] = op.apply(o, (assignNewValue && isLastOperator()) ? assignNewValue : null)
                     if (!parts[index]) throw new LangInterpretError(Errors.ATTRIBUTE_NOT_FOUND, op.source)
                     parts = removeElementAt(parts, index - 1)

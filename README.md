@@ -224,11 +224,36 @@ obj := {
 obj.f()
 ```
 
+Everything is an object:
+
+```
+1.plus(2)
+"Hello".concat("World")
+false.or(true)
+[1,2].eq([1,2])
+```
+
 ### Keywords
 
 All keywords are case-insensitive!
 
 `true`, `false`, `if`, `else`, `while`
+
+## Internationalization
+
+In order to be used in different native languages, LudolfC has several mutations of keywords and standard attributes. Other mutations are forseen in the future.
+
+| Keyword   | German (de) | Czech (cs) |
+| --------- | ----------- | ---------- |
+| `true`    | `wahr`      | `pravda`   |
+| `false`   | `unwahr`    | `nepravda` |
+| `if`      | `falls`     | `pokud`    |
+| `else`    | `sonst`     | `jinak`    |
+| `while`   | `solange`   | `dokud`    |
+
+| Attribute   | German (de) | Czech (cs)    |
+| ----------- | ----------- | ------------- |
+| `[].size`   | `[].größe`  | `[].velikost` |
 
 ## Interpreter
 

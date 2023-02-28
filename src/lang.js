@@ -5,10 +5,8 @@ const Keywords = {
     ELSE: ['else', 'jinak', 'sonst'],
     WHILE: ['while', 'dokud', 'solange'],
 }
+
 const SizeKeywords = ['size', 'velikost', 'größe']
-const WhileKeywords = ['while', 'dokud', 'solange']
-const IfKeywords = ['if', 'pokud', 'falls']
-const ElseKeywords = ['else', 'jinak', 'sonst']
 
 const Errors = {
     INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
@@ -20,8 +18,8 @@ const Errors = {
     UNEXPEXTED_KEYWORD: 'UNEXPEXTED_KEYWORD',
     INVALID_IDENTIFIER: 'INVALID_IDENTIFIER',
     UNEVEN_OPERATORS: 'UNEVEN_OPERATORS',
-    EXPEXTED_FUNCTION: 'EXPEXTED_FUNCTION',
-    EXPEXTED_STATEMENT_END: 'EXPEXTED_STATEMENT_END',
+    EXPECTED_FUNCTION: 'EXPECTED_FUNCTION',
+    EXPECTED_STATEMENT_END: 'EXPECTED_STATEMENT_END',
     ARRAY_INDEX_NOT_NUMBER: 'ARRAY_INDEX_NOT_NUMBER',
     ARRAY_INDEX_MISSING: 'ARRAY_INDEX_MISSING',
     ARRAY_INDEX_OUT_BOUNDS: 'ARRAY_INDEX_OUT_BOUNDS',
@@ -75,7 +73,8 @@ class LangInterrupt {
 class LangError extends Error {
     constructor(id, pos, arg1, arg2) {
         super(id)
-        this.message = `${id} ${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`
+        this.details = `${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`
+        this.message = `${id} ${details}`
         this.id = id
         this.arg1 = arg1
         this.arg2 = arg2
@@ -321,6 +320,9 @@ class LangObject {
     protected() {
         return this.isProtected || (this.parent && this.parent.protected())
     }
+    protectedAttributes() {
+        return this.protected()
+    }
 }
 
 class LangValueObject extends LangObject {
@@ -347,6 +349,9 @@ class LangNumber extends LangValueObject {
         this.ge = new LangNativeFunction(x => new LangBoolean(this.value >= x.value))
         this.neg = new LangNativeFunction(() => new LangNumber(-this.value))
         this.sum = new LangNativeFunction((...x) => new LangNumber(x.reduce((a,c) => a + c.value, this.value)))
+        this.round = new LangNativeFunction(() => new LangNumber(Math.round(this.value)))
+        this.floor = new LangNativeFunction(() => new LangNumber(Math.floor(this.value)))
+        this.ceil = new LangNativeFunction(() => new LangNumber(Math.ceil(this.value)))
     }
 }
 
@@ -438,6 +443,17 @@ class LangFunction {
         this.eq = new LangNativeFunction(x => new LangBoolean(false))
         this.ne = new LangNativeFunction(x => new LangBoolean(true))
     }
+    attribute(name, newValue) {
+        if (newValue) throw new LangError(Errors.READONLY_ATTRIBUTE)
+        const value = this[name] ? this[name] : this.value[name] // explicit attrs have priority over native ones
+        if (value) return value
+    }
+    hasAttribute(name) {
+        return this[name] || this.value[name]
+    }
+    protectedAttributes() {
+        return true
+    }
 }
 
 class LangNativeFunction {
@@ -468,9 +484,6 @@ module.exports = {
     Interruptions,
     Types,
     SizeKeywords,
-    WhileKeywords,
-    IfKeywords,
-    ElseKeywords,
     Block,
     Assignment,
     While,

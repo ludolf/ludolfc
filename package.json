@@ -1,6 +1,6 @@
 {
   "name": "ludolfc",
-  "version": "0.0.0-alpha3",
+  "version": "0.0.0-alpha4",
   "description": "LudolfC programming language",
   "main": "./dist/ludolfc.js",
   "scripts": {
@@ -16,7 +16,9 @@
     "ludolfc",
     "programming",
     "learning",
-    "kids"
+    "children",
+    "kids",
+    "school"
   ],
   "author": "Tomas Tulka (ttulka)",
   "license": "GPL-3.0",
