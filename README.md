@@ -3,6 +3,8 @@
 
 LudolfC is a simple programming language for learning concepts of structured, 
     object-oriented and functional programming.
+    
+Check it out online at https://ludolfc.github.io
 
 <img src="logo.svg" style="width: 20rem; float: right;" align="right">
 
