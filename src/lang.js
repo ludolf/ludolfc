@@ -74,7 +74,7 @@ class LangError extends Error {
     constructor(id, pos, arg1, arg2) {
         super(id)
         this.details = `${arg1 ? `"${arg1}"` : ''} ${arg2 ? `"${arg2}"` : ''}`
-        this.message = `${id} ${details}`
+        this.message = `${id} ${this.details}`
         this.id = id
         this.arg1 = arg1
         this.arg2 = arg2
@@ -433,15 +433,16 @@ class LangVoid extends LangValueObject {
 }
 
 class LangFunction {
-    constructor(body, args, source) {
+    constructor(body, args, funcId, source) {
         this.type = Types.FUNCTION
         this.body = body
         this.args = args
         this.isFunction = true
         this.source = source
+        this.funcId = funcId
 
-        this.eq = new LangNativeFunction(x => new LangBoolean(false))
-        this.ne = new LangNativeFunction(x => new LangBoolean(true))
+        this.eq = new LangNativeFunction(g => new LangBoolean(g.funcId === this.funcId))
+        this.ne = new LangNativeFunction(g => new LangBoolean(g.funcId !== this.funcId))
     }
     attribute(name, newValue) {
         if (newValue) throw new LangError(Errors.READONLY_ATTRIBUTE)

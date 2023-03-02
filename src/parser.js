@@ -65,6 +65,7 @@ class Parser {
     constructor() {    
         this.steps = 0
         this.maxSteps = 1000000 // to prevent infinite loops
+        this.fcount = 0 // counter for function IDs
     }
 
     parse(code) {
@@ -492,7 +493,7 @@ class Parser {
     parseFunction(source) {
         const args = this.readArguments(source)
         const body = this.parseBody(source)
-        return new LangFunction(body, args, source.absPos())
+        return new LangFunction(body, args, ++this.fcount, source.absPos())
     }
 
     readArguments(source) {

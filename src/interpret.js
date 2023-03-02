@@ -5,26 +5,26 @@ const {
     InterpretError: LangInterpretError,
     Interrupt: LangInterrupt,
     Void: LangVoid } = require('./lang')
-
+    
 class Interpret {
     constructor(imports = {}, controls, maxSteps = 100000) {
-        this.variables = new VariablesScope(imports)
-        this.stepper = new ExecutionStepper(maxSteps, controls && controls.isInterrupted) // to prevent infinite loops
+        this.imports = imports
+        this.stepper = new ExecutionStepper(maxSteps, controls && controls.isInterrupted) // to prevent infinite loops        
     }
 
     async execute(ast) {
-        this.variables.clear()
+        this.variables = new VariablesScope(this.imports)
         this.stepper.reset()
         return await this.executeBlock(ast, false)
     }
 
     async executeBlock(block, newScope = true) {        
-        if (newScope) this.variables.pushScope()
+        if (newScope) this.variables = this.variables.pushScope()
         let result
         for (let stm of block.statements) {
             result = await this.executeStatement(stm)
         }
-        if (newScope) this.variables.popScope()
+        if (newScope) this.variables = this.variables.popScope()
         return result ? result : new LangVoid()
     }
 
@@ -107,9 +107,7 @@ class Interpret {
                     assignApplied = true
                 } else 
                 if (op.isCall) {
-                    const f = await this.executeExpressionPart(parts[index - 1])
-                    const params = await Promise.all(op.params.map(p => this.executeExpressionPart(p)))
-                    parts[index] = await this.executeFunctionCall(f, params)
+                    parts[index] = new FunctionExecution(parts[index - 1], op.params)  // to prevent immediate execution
                     parts = removeElementAt(parts, index - 1)
                 }
                 else throw new LangInterpretError(Errors.UNKNOWN_OPERATOR, op.source)
@@ -163,6 +161,11 @@ class Interpret {
             if (!this.variables.hasVariable(expressionPart.varName)) throw new LangInterpretError(Errors.UNREFERENCED_VARIABLE, expressionPart.source - expressionPart.varName.length, expressionPart.varName)
             return this.variables.getVariable(expressionPart.varName)
         }
+        if (expressionPart.isFunctionExecution) {
+            const func = await this.executeExpressionPart(expressionPart.funcExp)
+            const params = await Promise.all(expressionPart.params.map(p => this.executeExpressionPart(p)))
+            return await this.executeFunctionCall(func, params)
+        }
         if (expressionPart.isExpression) {
             return await this.executeExpression(expressionPart)
         }
@@ -179,6 +182,9 @@ class Interpret {
                 if (obj[k].isObject || obj[k].isFunction) obj[k].parent = expressionPart
             }
         }
+        if (expressionPart.isFunction && !expressionPart.scope) {
+            expressionPart.scope = this.variables.copy()            
+        }
         return expressionPart
     }
 
@@ -191,7 +197,8 @@ class Interpret {
         if ((!params && f.args) || params.length !== f.args.length) throw new LangInterpretError(Errors.FUNC_ARGUMENTS_MISHMASH, f.source)
         // scoped variables
         let i = 0
-        this.variables.pushScope()
+        const variablesBak = this.variables
+        this.variables = f.scope.pushScope()
         for (let arg of f.args) {
             this.variables.setVariable(arg, params[i++], true)
         }
@@ -206,6 +213,7 @@ class Interpret {
 
         } finally {  // clean up variables
             this.variables.popScope()
+            this.variables = variablesBak
         }
     }
 
@@ -246,62 +254,77 @@ class Interpret {
 
 class VariablesScope {
     constructor(imports = {}) {
-        this.variables = [new Map()]
-        this.imports = imports
-    }
-
-    clear() {
-        this.variables = [new Map()]
-        if (this.imports) Object.entries(this.imports).forEach(([k,v]) => this.variables[0].set(k, v))
+        this.variables = new Map()
+        this.parent = null
+        if (imports) Object.entries(imports).forEach(([k,v]) => this.variables.set(k, v))
     }
 
     hasVariable(name) {
-        for (let i = this.variables.length - 1; i >= 0; i--) {
-            if (this.variables[i].has(name)) return true
-            if (this.variables[i].has('$')) {
-                const self = this.variables[i].get('$')
-                if (self.hasAttribute(name)) return true
-            }
+        if (this.variables.has(name)) return true
+        if (this.variables.has('$')) {
+            const self = this.variables.get('$')
+            if (self.hasAttribute(name)) return true
         }
+        if (this.parent) return this.parent.hasVariable(name)
         return false
     }
 
     getVariable(name) {
-        for (let i = this.variables.length - 1; i >= 0; i--) {
-            if (this.variables[i].has(name)) return this.variables[i].get(name)
-            if (this.variables[i].has('$')) {
-                const self = this.variables[i].get('$')
-                if (self.hasAttribute(name)) return self.attribute(name)
-            }
+        if (this.variables.has(name)) return this.variables.get(name)
+        if (this.variables.has('$')) {
+            const self = this.variables.get('$')
+            if (self.hasAttribute(name)) return self.attribute(name)
         }
+        if (this.parent) return this.parent.getVariable(name)
         return false
     }
 
     setVariable(name, value, scoped = false) {
         if (scoped) {
-            this.variables[this.variables.length - 1].set(name, value)
+            this.variables.set(name, value)
             return
         }
         let found = false
-        for (let i = this.variables.length - 1; i >= 0; i--) {
-            if (this.variables[i].has(name)) {
-                this.variables[i].set(name, value)
+        let scope = this
+        do {
+            if (scope.variables.has(name)) {
+                scope.variables.set(name, value)
                 found = true
-                break
             }
-        }
+            scope = scope.parent
+        } while (!found && scope)
+        
         if (!found) {
-            if (!this.variables.length) this.clear()
-            this.variables[this.variables.length - 1].set(name, value)
+            this.variables.set(name, value)
         }
     }
 
     pushScope() {
-        this.variables.push(new Map())
+        const newScope = new VariablesScope()
+        newScope.parent = this
+        return newScope
     }
 
     popScope() {
-        this.variables.pop()
+        const parent = this.parent
+        this.parent = null
+        return parent
+    }
+
+    copy() {
+        const newScope = new VariablesScope(this.imports)
+        newScope.variables = this.variables
+        newScope.parent = this.parent
+        return newScope
+    }
+}
+
+// wrapper over a function call (func and params are not resolved yet)
+class FunctionExecution {
+    constructor(funcExp, params) {
+        this.funcExp = funcExp
+        this.params = params
+        this.isFunctionExecution = true
     }
 }
 

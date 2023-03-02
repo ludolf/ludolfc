@@ -186,6 +186,17 @@ six := func(1,2)
 // 'res' does not exist here
 ```
 
+Functions are first-class citizens:
+```
+f := (){(){1}}
+f()()
+
+x := 1
+f := (a){(){x+a()}}
+g := f((){x})
+g()
+```
+
 ### Objects
 
 Object are heterogeneous structures of named attributes.
