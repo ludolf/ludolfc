@@ -183,7 +183,7 @@ class Parser {
 
             if (':' === c && !openDefinitions.objects) {    // assignment starting
                 if (!(token.trim().length)) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.absPos(), c)
-                if (isKeyword(token.trim())) throw new LangParseError(Errors.UNEXPEXTED_KEYWORD, source.absPos(), c)
+                if (isKeyword(token.trim())) throw new LangParseError(Errors.UNEXPECTED_KEYWORD, source.absPos(), c)
                 expecting = '='
             } else
             if (inAssignment) {  // variable assignment                

@@ -125,7 +125,7 @@ test('error parse #9', async () => {
   } catch (e) {
     expect(e.isLangError).toBe(true)
     expect(e.isParseError).toBe(true)
-    expect(e.id).toBe(lang.Errors.UNEXPEXTED_KEYWORD)
+    expect(e.id).toBe(lang.Errors.UNEXPECTED_KEYWORD)
     expect(e.line).toBe(1)
     expect(e.col).toBe(6)
   }
