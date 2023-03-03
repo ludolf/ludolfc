@@ -18,7 +18,7 @@ name := value
 Variable names can contain all word characters, digits and underscore `_`. 
 A varible name must not start with a digit.
 
-Unicode characters `ěščřžťďýáíéúůüöäñĚŠČŘŽŤĎÝÁÍÉÚŮÜÖÄÑß` are allowed.
+Unicode characters `ěščřžťďýáíéúůüöäňñĚŠČŘŽŤĎÝÁÍÉÚŮÜÖÄŇÑß` are allowed.
 
 Variable names are case-sensitive.
 
