@@ -305,22 +305,22 @@ A web-based interpreter is to be found in [dist/](dist/).
 
 ```
 insertionSort := (arr) {
-    n := arr.size
-    i := 1
-    while i < n {
-        current := arr[i]
-        j := i - 1 
-        while j > -1 & current < arr[j] {
-            arr[j + 1] := arr[j]
-            j := j - 1
-        }
-        arr[j + 1] := current
-        i := i + 1
+  n := arr.size
+  i := 1
+  while i < n {
+    c := arr[i]
+    j := i - 1 
+    while j > -1 & c < arr[j] {
+      arr[j + 1] := arr[j]
+      j := j - 1
     }
-    arr
+    arr[j + 1] := c
+    i := i + 1
+  }
+  arr
 }
 
-insertionSort([8,5,6,3,2,1,7,9,4])
+insertionSort([5,3,2,1,4])
 ```
 
 ```
