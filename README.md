@@ -241,8 +241,11 @@ Everything is an object:
 
 ```
 1.plus(2)
+
 "Hello".concat("World")
+
 false.or(true)
+
 [1,2].eq([1,2])
 ```
 
@@ -321,10 +324,8 @@ insertionSort([8,5,6,3,2,1,7,9,4])
 ```
 
 ```
-// prints 1
-o  := 1
-oo := (o){o}
-(o){(o){o}((ooo){oo(ooo)}((o){o}(o)))}(oo(o))
+o := 1
+(o){(o){o}((o){o})}(o)(o)
 ```
 
 ## Build
