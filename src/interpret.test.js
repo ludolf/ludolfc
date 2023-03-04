@@ -1621,3 +1621,38 @@ test('interpret function execution order #2', async () => {
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(5)
 })
+
+test('interpret function execution order #3', async () => {
+  const ast = parser.parse('x:=1\nf:=(a){x:=x+a;x}\nf(x)+f(x)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
+test('interpret function execution order #4', async () => {
+  const ast = parser.parse('x:=1\nf:=(a){x:=x+a;x}\nf(x)+f(x)+f(x)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(14)
+})
+
+test('interpret function execution order #5', async () => {
+  const ast = parser.parse('x:=1\nf:=(a){x:=x+a;x}\nf(x)+f(x+1)+f(x+2)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(19)
+})
+
+test('interpret function execution order #6', async () => {
+  const ast = parser.parse('x:=1\nf:=(a){x:=x+a;x}\nx+f(x)+f(x)+x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(11)
+})
+
+test('interpret function nesting', async () => {
+  const ast = parser.parse('o:=1\n(o){(o){o}((o){o})}(o)(o)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
