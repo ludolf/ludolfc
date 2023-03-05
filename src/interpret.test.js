@@ -991,6 +991,13 @@ test('interpret array size #5', async () => {
   expect(result.value).toBe(2)
 })
 
+test('interpret array size #6', async () => {
+  const ast = parser.parse('([1,2] + [3]).size')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
 test('interpret string size', async () => {
   const ast = parser.parse('"a".size')
   const result = await interpret.execute(ast)
@@ -1024,6 +1031,20 @@ test('interpret string size #5', async () => {
   const result = await interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(2)
+})
+
+test('interpret string size #6', async () => {
+  const ast = parser.parse('("ab" + "c").size')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret string size #7', async () => {
+  const ast = parser.parse('"ab".concat("c").size')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
 })
 
 test('interpret array eq', async () => {
@@ -1655,4 +1676,18 @@ test('interpret function nesting', async () => {
   const result = await interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
   expect(result.value).toBe(1)
+})
+
+test('interpret function recursion', async () => {
+  const ast = parser.parse('f:=(a){if a > 0 { a := a + f(a - 1)}\na}\nf(5)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(15)
+})
+
+test('interpret function recursion#2', async () => {
+  const ast = parser.parse('f:=(a){if a > 0 { a := a + f(a - 1) + f(a - 2)}\na}\nf(5)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(21)
 })
