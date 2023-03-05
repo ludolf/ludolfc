@@ -147,3 +147,16 @@ test('source #1', async () => {
   expect(ludolfC.getVariable('_if1').value).toBe(9)
   expect(ludolfC.getVariable('_if2').value).toBe(2)
 })
+
+test('object self reference', async () => {
+  const res = await ludolfC.execute(`
+  math := {
+    minus_one: -1,
+    plus: (a, b) { a + b },
+    minus: (a, b) { plus(a, b * minus_one) }
+  }
+  math.minus(5, 3)
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(2)
+})

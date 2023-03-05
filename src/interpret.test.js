@@ -1685,7 +1685,7 @@ test('interpret function recursion', async () => {
   expect(result.value).toBe(15)
 })
 
-test('interpret function recursion#2', async () => {
+test('interpret function recursion #2', async () => {
   const ast = parser.parse('f:=(a){if a > 0 { a := a + f(a - 1) + f(a - 2)}\na}\nf(5)')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('NUMBER')
