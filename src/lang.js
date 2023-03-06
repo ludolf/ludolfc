@@ -6,7 +6,9 @@ const Keywords = {
     WHILE: ['while', 'dokud', 'solange'],
 }
 
-const SizeKeywords = ['size', 'velikost', 'größe']
+const FeatureLocalizations = {
+    SIZE: ['size', 'velikost', 'größe'],
+}
 
 const Errors = {
     INVALID_UNI_OPERATOR: 'INVALID_UNI_OPERATOR',
@@ -361,9 +363,14 @@ class LangString extends LangValueObject {
 
         this.concat = new LangNativeFunction(x => new LangString(this.value + x.value))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
+        this.charAt = new LangNativeFunction(i => new LangString(this.value.charAt(i.value)))
+        this.sub = new LangNativeFunction((i, j) => {
+            if (i.value > this.value.length - 1 || i.value < 0 || (j && j.value <= i.value) || (j && j.value > this.value.length)) return new LangString('')
+            return new LangString(this.value.substring(i.value, j ? j.value : this.value.length))
+        })
         
         this.plus = this.concat
-        for (let s of SizeKeywords) this[s] = new LangNumber(this.value.length)
+        for (let s of FeatureLocalizations.SIZE) this[s] = new LangNumber(this.value.length)
     }
 }
 
@@ -389,7 +396,7 @@ class LangArray extends LangValueObject {
         this.concat = new LangNativeFunction(x => new LangArray(this.value.concat(x.value)))
 
         this.plus = this.concat
-        for (let s of SizeKeywords) this[s] = new LangNumber(this.value.length)
+        for (let s of FeatureLocalizations.SIZE) this[s] = new LangNumber(this.value.length)
 
         this.eq = new LangNativeFunction(x => {
             if (!x || !x.value) return new LangBoolean(false)
@@ -412,14 +419,14 @@ class LangArray extends LangValueObject {
         }, this)
     }
     attribute(name, newValue) {
-        if (SizeKeywords.includes(name.toLowerCase())) {
+        if (FeatureLocalizations.SIZE.includes(name.toLowerCase())) {
             if (newValue) throw new LangError(Errors.READONLY_ATTRIBUTE)
             return new LangNumber(this.value.length)
         }
         return super.attribute(name, newValue)
     }
     hasAttribute(name) {
-        return SizeKeywords.includes(name.toLowerCase()) || super.attribute(name, newValue)
+        return FeatureLocalizations.SIZE.includes(name.toLowerCase()) || super.attribute(name, newValue)
     }
 }
 
@@ -484,7 +491,6 @@ module.exports = {
     Errors,
     Interruptions,
     Types,
-    SizeKeywords,
     Block,
     Assignment,
     While,

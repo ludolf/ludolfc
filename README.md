@@ -36,6 +36,19 @@ four  := 5 + 4 / 2 + -3
 three := -0.5 + 1.25 + 2.25
 ```
 
+| Feature   | Operation      | Return type | Example           |
+| --------- | -------------- | ----------- | ----------------- |
+| `plus`    | addition       | Number      | `1.plus(2) = 3`   |
+| `minus`   | subtraction    | Number      | `2.minus(1) = 1`  |
+| `mult`    | multiplication | Number      | `2.mult(3) = 6`   |
+| `div`     | division       | Number      | `4.div(2) = 2`    |
+| `mod`     | modulo         | Number      | `5.mod(3) = 2`    |
+| `neg`     | negation       | Number      | `1.neg() = -1`    |
+| `sum`     | sum            | Number      | `1.sum(2, 3) = 6` |
+| `round`   | rounding       | Number      | `1.5.round() = 2` |
+| `floor`   | floor          | Number      | `1.5.floor() = 1` |
+| `ceil`    | ceiling        | Number      | `1.2.ceil() = 2`  |
+
 #### Strings
 ```
 string1 := "Hello World!"
@@ -46,6 +59,16 @@ empty := ""
 abcde := "ab" + 'c' + “de”
 ```
 
+| Feature   | Operation      | Return type | Example                      |
+| --------- | -------------- | ----------- | ---------------------------- |
+| `concat`  | concatenation  | String      | `"ab".concat("c") = "abc"`   |
+| `charAt`  | char at index  | String      | `"abc".charAt(1) = "b"`      |
+| `sub`     | substring      | String      | `"abc".sub(1,2) = "b"`       |
+
+| Property  | Value          | Data type   | Example          |
+| --------- | -------------- | ----------- | ---------------- |
+| `size`    | size           | Number      | `"abc".size = 3` |
+
 #### Boolean
 ```
 t := true | false
@@ -54,6 +77,14 @@ f := true & false
 t := 1 <= 2
 t := 1 != 2
 ```
+
+| Feature   | Operation             | Return type | Example                     |
+| --------- | --------------------- | ----------- | --------------------------- |
+| `nand`    | logical negation      | Boolean     | `true.neg() = false`        |
+| `and`     | logical conjunction   | Boolean     | `true.and(false) = false`   |
+| `or`      | logical disjunction   | Boolean     | `true.or(false) = true`     |
+| `xor`     | exclusive disjunction | Boolean     | `true.xor(true) = false`    |
+| `nand`    | alternative denial    | Boolean     | `true.nand(true) = false`   |
 
 #### Void
 Void is a special data type with an empty value. Void is a result of statement 
@@ -92,7 +123,18 @@ arr[1].size
 
 // false
 [1,2] = [2,1]
+
+// true
+[1] + [2,3] = [1,2,3]
 ```
+
+| Feature   | Operation      | Return type | Example                         |
+| --------- | -------------- | ----------- | ------------------------------- |
+| `concat`  | concatenation  | Array       | `[1,2].concat([3]) = [1,2,3]`   |
+
+| Property  | Value          | Data type   | Example            |
+| --------- | -------------- | ----------- | ------------------ |
+| `size`    | size           | Number      | `[1,2,3].size = 3` |
 
 ### Conditionals
 

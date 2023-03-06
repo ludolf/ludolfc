@@ -1047,6 +1047,111 @@ test('interpret string size #7', async () => {
   expect(result.value).toBe(3)
 })
 
+test('interpret string charAt', async () => {
+  const ast = parser.parse('"ab".charAt(1)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('b')
+})
+
+test('interpret string charAt #2', async () => {
+  const ast = parser.parse('"ab".charAt(0)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a')
+})
+
+test('interpret string charAt #3', async () => {
+  const ast = parser.parse('"ab".charAt(10)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub', async () => {
+  const ast = parser.parse('"abc".sub(1, 3)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('bc')
+})
+
+test('interpret string sub #2', async () => {
+  const ast = parser.parse('"abc".sub(1, 1)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub #3', async () => {
+  const ast = parser.parse('"abc".sub(1, 2)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('b')
+})
+
+test('interpret string sub #4', async () => {
+  const ast = parser.parse('"abc".sub(10, 2)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub #5', async () => {
+  const ast = parser.parse('"abc".sub(1)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('bc')
+})
+
+test('interpret string sub #6', async () => {
+  const ast = parser.parse('"abc".sub(3)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub #7', async () => {
+  const ast = parser.parse('"abc".sub(10)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub #8', async () => {
+  const ast = parser.parse('"abc".sub(-1)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret string sub #9', async () => {
+  const ast = parser.parse('"abc".sub(1,10)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('')
+})
+
+test('interpret number sum', async () => {
+  const ast = parser.parse('1.sum(2, 3)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(6)
+})
+
+test('interpret number sum #2', async () => {
+  const ast = parser.parse('1.sum(2)')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret number sum #3', async () => {
+  const ast = parser.parse('1.sum()')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
 test('interpret array eq', async () => {
   const ast = parser.parse('[1] = [1]')
   const result = await interpret.execute(ast)
