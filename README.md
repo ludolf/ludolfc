@@ -309,7 +309,7 @@ In order to be used in different native languages, LudolfC has several mutations
 | `else`    | `sonst`     | `jinak`    |
 | `while`   | `solange`   | `dokud`    |
 
-| Attribute   | German (de) | Czech (cs)    |
+| Propery     | German (de) | Czech (cs)    |
 | ----------- | ----------- | ------------- |
 | `[].size`   | `[].größe`  | `[].velikost` |
 
