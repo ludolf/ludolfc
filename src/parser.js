@@ -157,27 +157,7 @@ class Parser {
                 if (token.length) {
                     throw new LangParseError(Errors.UNEXPECTED_SYMBOL, token)
                 }
-                consumeSpaces(source)
-                consumeUntil(source, '\\s')
-                const def = this.parseIf(source)
-                consumeSpaces(source, true)
-                if (isElseDef(source.remaining())) {
-                    consumeSpaces(source)
-                    consumeUntil(source, '\\s')
-                    def.elseBody = this.parseBody(source)
-                    consumeSpaces(source, true)
-                }
-                if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
-                if (!def.elseBody) {
-                    consumeSpaces(source)
-                    if (isElseDef(source.remaining())) {
-                        consumeSpaces(source)
-                        consumeUntil(source, '\\s')
-                        def.elseBody = this.parseBody(source)
-                        consumeSpaces(source, true)
-                        if (!isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
-                    }
-                }
+                const def = this.parseIfStatement(source)
                 return def
             }
 
@@ -420,6 +400,30 @@ class Parser {
 
             token += c
         }
+    }
+
+    parseIfStatement(source) {
+        consumeSpaces(source)
+        consumeUntil(source, '\\s')
+        const def = this.parseIf(source)
+        consumeSpaces(source, true)
+
+        let newLine = isStatementSeparator(source.currentChar())
+        consumeSpaces(source)
+
+        if (isElseDef(source.remaining())) {
+            consumeUntil(source, '\\s')
+            def.elseBody = this.parseBody(source)
+            consumeSpaces(source, true)
+        } else
+        if (isElseIfDef(source.remaining())) {
+            consumeUntil(source, '\\s')
+            const elseIf = this.parseIfStatement(source)
+            def.elseBody = new Block([elseIf], source.absPos())
+            newLine = true
+        }
+        if (!newLine && !isStatementSeparator(source.currentChar())) throw new LangParseError(Errors.EXPECTED_STATEMENT_END, source.absPos())
+        return def
     }
 
     readList(source, groupingCloseChar) {
@@ -676,6 +680,10 @@ function isIfDef(remaining) {
 
 function isElseDef(remaining) {
     return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+{`).test(remaining)) 
+}
+
+function isElseIfDef(remaining) {
+    return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+(${Keywords.IF.join('|')})`).test(remaining)) 
 }
 
 function isComment(remaining) {

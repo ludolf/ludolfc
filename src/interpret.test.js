@@ -858,6 +858,76 @@ test('interpret if else #10', async () => {
   expect(result.value).toBe(1)
 })
 
+test('interpret if elseif', async () => {
+  const ast = parser.parse('a:=0\nif (1<=1) {a:=1}\nelse if (a=1) {a:=2}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret if elseif #2', async () => {
+  const ast = parser.parse('a:=0\nif (a<0) {a:=1}\nelse if (a>1) {a:=2}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(0)
+})
+
+test('interpret if elseif #3', async () => {
+  const ast = parser.parse('a:=0\nif (a<0) {a:=1}\nelse if (a<1) {a:=2}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if elseif #4', async () => {
+  const ast = parser.parse('a:=0\nif (a<0) {a:=1} else if (a<1) {a:=2}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if elseif else', async () => {
+  const ast = parser.parse('a:=0\nif (a>1) {a:=1}\nelse if (a>0) {a:=2}\nelse {a:=3}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if elseif else #2', async () => {
+  const ast = parser.parse('a:=0\nif (a>=0) {a:=1}\nelse if (a>0) {a:=2}\nelse {a:=3}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(1)
+})
+
+test('interpret if elseif else #3', async () => {
+  const ast = parser.parse('a:=0\nif (a>0) {a:=1}\nelse if (a>=0) {a:=2}\nelse {a:=3}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(2)
+})
+
+test('interpret if elseif else #4', async () => {
+  const ast = parser.parse('a:=0\nif (a>1) {a:=1} else if (a>0) {a:=2} else {a:=3}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if elseif else #5', async () => {
+  const ast = parser.parse('a:=0\nif (a>1) {a:=1} else if (a>0) {a:=2} else if (a>=0) {a:=3} else {a:=4}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
+test('interpret if elseif else #6', async () => {
+  const ast = parser.parse('a:=0\nif (a>2) {a:=1} else if (a>1) {a:=2} else if (a>0) {a:=3} else {a:=4}\na')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(4)
+})
+
 test('interpret function recursion', async () => {
   const ast = parser.parse('f := (){ a:=a+1\nif a < 10 { f() }}\na:=1\nf()\na')
   const result = await interpret.execute(ast)

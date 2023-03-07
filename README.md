@@ -150,6 +150,16 @@ if condition {
 } else {
     // body for condition is false
 }
+
+if condition1 {
+    // body for condition1 is true
+} else if condition2 {
+    // body for condition2 is true
+} else if condition3 {
+    // body for condition3 is true
+} else {
+    // body for conditions are false
+}
 ```
 
 Conditions must be of type Boolean:
