@@ -56,7 +56,7 @@ string2 := 'Hello World!'
 string3 := “Hello World!”
 
 empty := ""
-abcde := "ab" + 'c' + “de”
+abcde1 := "ab" + 'c' + 1
 ```
 
 | Feature   | Operation      | Return type | Example                      |
