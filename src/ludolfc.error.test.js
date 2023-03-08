@@ -274,6 +274,71 @@ test('error interpret #8', async () => {
   }
 })
 
+test('error interpret wrong ops', async () => {
+  try {
+    await ludolfC.execute('1 + "a"')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isInterpretError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(2)
+  }
+})
+
+test('error interpret wrong ops #2', async () => {
+  try {
+    await ludolfC.execute('"a" + []')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isInterpretError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(4)
+  }
+})
+
+test('error interpret wrong ops #3', async () => {
+  try {
+    await ludolfC.execute('"a" + [1]')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isInterpretError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(4)
+  }
+})
+
+test('error interpret wrong ops #4', async () => {
+  try {
+    await ludolfC.execute('"a" + {}')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isInterpretError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(4)
+  }
+})
+
+test('error interpret wrong ops #5', async () => {
+  try {
+    await ludolfC.execute('"a" + {b:"b"}')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isInterpretError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNMATCHING_BI_OPERATOR_SUBJECTS)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(4)
+  }
+})
+
 test('error interpret attribute not found', async () => {
   try {
     await ludolfC.execute('o:={}\no.a')

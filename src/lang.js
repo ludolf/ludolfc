@@ -202,6 +202,7 @@ class BiOperator extends Operator {
         super(op)
         this.isBi = true
         this.precedence = this.getPrecedence()
+        this.isAddition = '+' === op
         this.source = source
     }
     apply(a, b) {
@@ -339,6 +340,7 @@ class LangValueObject extends LangObject {
 class LangNumber extends LangValueObject {
     constructor(value, source) {
         super(value, source, Types.NUMBER)
+        this.isPrimitive = true
         
         this.mult = new LangNativeFunction(x => new LangNumber(this.value * x.value))
         this.div = new LangNativeFunction(x => new LangNumber(this.value / x.value))
@@ -360,6 +362,7 @@ class LangNumber extends LangValueObject {
 class LangString extends LangValueObject {
     constructor(value, source) {
         super(value, source, Types.STRING)
+        this.isPrimitive = true
 
         this.concat = new LangNativeFunction(x => new LangString(this.value + x.value))
         this.length = new LangNativeFunction(() => new LangNumber(this.value.length))
@@ -377,6 +380,7 @@ class LangString extends LangValueObject {
 class LangBoolean extends LangValueObject {
     constructor(value, source) {
         super(value, source, Types.BOOLEAN)
+        this.isPrimitive = true
 
         this.and = new LangNativeFunction(x => new LangBoolean(this.value && x.value))
         this.or = new LangNativeFunction(x => new LangBoolean(this.value || x.value))

@@ -991,6 +991,48 @@ test('interpret string concat #4', async () => {
   expect(result.value).toBe('abcd')
 })
 
+test('interpret string concat across types', async () => {
+  const ast = parser.parse('"a" + 1')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a1')
+})
+
+test('interpret string concat across types #2', async () => {
+  const ast = parser.parse('"a" + 1 + 2')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a12')
+})
+
+test('interpret string concat across types #3', async () => {
+  const ast = parser.parse('"a" + 1 + 2 + "b"')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a12b')
+})
+
+test('interpret string concat across types #4', async () => {
+  const ast = parser.parse('"a" + 1 + true + "b"')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('a1trueb')
+})
+
+test('interpret string concat across types #5', async () => {
+  const ast = parser.parse('"ab" + 123')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('ab123')
+})
+
+test('interpret string concat across types #6', async () => {
+  const ast = parser.parse('"" + 123')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('STRING')
+  expect(result.value).toBe('123')
+})
+
 test('interpret array concat', async () => {
   const ast = parser.parse('[] + []')
   const result = await interpret.execute(ast)

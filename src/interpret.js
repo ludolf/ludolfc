@@ -83,7 +83,7 @@ class Interpret {
                     const a = await this.executeExpressionPart(parts[index - 1])
                     const b = await this.executeExpressionPart(parts[index + 1])
                     if (!a.type || !b.type) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, op.source)
-                    if (a.type !== b.type) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, op.source)
+                    if (a.type !== b.type && !(op.isAddition && Types.STRING === a.type && b.isPrimitive)) throw new LangInterpretError(Errors.UNMATCHING_BI_OPERATOR_SUBJECTS, op.source)
                     parts[index] = op.apply(a, b)
                     parts = removeElementAt(parts, index - 1, index + 1)
                 } else
