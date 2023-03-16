@@ -31,9 +31,35 @@ const RE_FUNCTION = `\\((\\s*(${RE_IDENTIFIER})\\s*(,\\s*(${RE_IDENTIFIER}))*)?\
 
 class Source {
     constructor(code, startingAt = 0) {
-        this.code = code + '\n'
+        this.code = removeComments(code + '\n')
         this.pos = 0
         this.startingAt = startingAt
+
+        function removeComments(s) {
+            if (!s.length) return s
+            let res = ''
+            let quote = null
+            let inString = false
+            let inComment = false
+            let i = 0
+            for (; i < s.length - 1; i++) {
+                const c = s.charAt(i)
+
+                if (!inString && isStringStarting(c)) {
+                    inString = true
+                    quote = c
+                }
+                else if (inString && isStringEnding(c, quote)) {
+                    inString = false
+                    quote = null
+                }
+                else if (!inString && c === '/' && s.charAt(i + 1) === '/') inComment = true
+                else if (c === '\n') inComment = false
+
+                if (!inComment) res += c
+            }
+            return res + s.charAt(s.length - 1)
+        }
     }
 
     move(step = 1) {
@@ -41,7 +67,7 @@ class Source {
     }
 
     currentChar() {
-        return this.code[this.pos]
+        return this.code.charAt(this.pos)
     }
 
     remaining(length = undefined) {
@@ -66,11 +92,13 @@ class Parser {
         this.steps = 0
         this.maxSteps = 1000000 // to prevent infinite loops
         this.fcount = 0 // counter for function IDs
+        this.source = new Source('')
     }
 
     parse(code) {
         this.steps = 0
-        return this.parseBlock(new Source(code))
+        this.source = new Source(code)
+        return this.parseBlock(this.source)
     }
 
     parseBlock(source) {
@@ -100,12 +128,6 @@ class Parser {
 
             const c = source.currentChar()
 
-            // comment
-            if (isComment(source.remaining())) {
-                consumeUntil(source, '\\n')
-                continue
-            }
-            
             // consume the whole string to prevent space-ignoring
             if (!inAssignment && isStringStarting(c)) {
                 let cc = c
@@ -684,10 +706,6 @@ function isElseDef(remaining) {
 
 function isElseIfDef(remaining) {
     return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+(${Keywords.IF.join('|')})`).test(remaining)) 
-}
-
-function isComment(remaining) {
-    return new RegExp('^//').test(remaining)
 }
 
 module.exports = Parser

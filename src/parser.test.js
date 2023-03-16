@@ -1671,6 +1671,16 @@ test('parse comment #7', () => {
 })
 
 test('parse comment #8', () => {
+  const ast = parser.parse('1  // //')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #9', () => {
+  const ast = parser.parse('// c\n1  // a // b\n// d')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #10', () => {
   const ast = parser.parse('1\n//x')
   expect(ast.statements).toHaveLength(1)
   expect(ast.statements[0].isExpression).toBe(true)
@@ -1679,14 +1689,64 @@ test('parse comment #8', () => {
   expect(ast.statements[0].parts[0].value).toBe(1)
 })
 
-test('parse comment #9', () => {
+test('parse comment #11', () => {
   const ast = parser.parse('//    _if1 := _if1 - 1')
   expect(ast.statements).toHaveLength(0)
 })
 
-test('parse comment #10', () => {
+test('parse comment #12', () => {
   const ast = parser.parse('//if _if1 > 3 {\n//    _if1 := _if1 - 1')
   expect(ast.statements).toHaveLength(0)
+})
+
+test('parse comment #13', () => {
+  const ast = parser.parse('if true { // c1\n a := 1 // c2\n}// c3 \n// c4')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #14', () => {
+  const ast = parser.parse('"//"')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #15', () => {
+  const ast = parser.parse('//""')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parse comment #16', () => {
+  const ast = parser.parse('//')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parse comment #17', () => {
+  const ast = parser.parse("'//'")
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #18', () => {
+  const ast = parser.parse('//a')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parse comment #19', () => {
+  const ast = parser.parse('// a')
+  expect(ast.statements).toHaveLength(0)
+})
+
+test('parse comment #20', () => {
+  const ast = parser.parse('1 // a')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #21', () => {
+  const ast = parser.parse('1 ///////////// /////// //////')
+  expect(ast.statements).toHaveLength(1)
+})
+
+test('parse comment #22', () => {
+  const ast = parser.parse('"/////////////\n///////\n\n//////"')
+  expect(ast.statements).toHaveLength(1)
 })
 
 test('parse if', () => {

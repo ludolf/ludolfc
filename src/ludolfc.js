@@ -24,7 +24,7 @@ class LudolfC {
 
         } catch (e) {
             if (e.isLangError && (e.position || e.position === 0)) {
-                const {line, col} = lineAndCol(code, e.position)
+                const {line, col} = lineAndCol(this.parser.source.code, e.position)
                 e.line = line
                 e.col = col
             }
@@ -46,7 +46,7 @@ function lineAndCol(code, position) {
     let col = 1
     for (let i = 0; i < code.length && i <= position; i++) {
         col++
-        if ('\n' === code[i]) {
+        if ('\n' === code.charAt(i)) {
             line++
             col = 1
         }

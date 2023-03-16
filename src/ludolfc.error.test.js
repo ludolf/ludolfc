@@ -100,8 +100,8 @@ test('error parse #7', async () => {
     expect(e.isLangError).toBe(true)
     expect(e.isParseError).toBe(true)
     expect(e.id).toBe(lang.Errors.EXPECTED_SYMBOL)
-    expect(e.line).toBe(3)
-    expect(e.col).toBe(9)
+    expect(e.line).toBe(4)  // expected body on the new line
+    expect(e.col).toBe(1)
   }
 })
 
@@ -167,6 +167,32 @@ test('error parse #12', async () => {
     expect(e.id).toBe(lang.Errors.UNEXPECTED_SYMBOL)
     expect(e.line).toBe(1)
     expect(e.col).toBe(5)
+  }
+})
+
+test('error parse #13', async () => {
+  try {
+    await ludolfC.execute('\n\n1 2')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isParseError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNEXPECTED_SYMBOL)
+    expect(e.line).toBe(3)
+    expect(e.col).toBe(2)
+  }
+})
+
+test('error parse #14', async () => {
+  try {
+    await ludolfC.execute('//x\n//y\n1 2')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isParseError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNEXPECTED_SYMBOL)
+    expect(e.line).toBe(3)
+    expect(e.col).toBe(2)
   }
 })
 

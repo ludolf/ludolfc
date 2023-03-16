@@ -160,3 +160,47 @@ test('object self reference', async () => {
   expect(res.type).toBe(lang.Types.NUMBER)
   expect(res.value).toBe(2)
 })
+
+test('else-if', async () => {
+  const res = await ludolfC.execute(`
+  a := 0
+  f := (){ a := a + 1; a }
+  r := 0
+  
+  if f() > 1 {
+    r := 1
+  } else if f() > 1 {
+    r := 2
+  } else if f() > 1 {
+    r := 3
+  } else {
+    r := 4
+  }
+  "r" + r + "a" + a
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('r2a2')
+})
+
+test('comments', async () => {
+  const res = await ludolfC.execute(`
+  // comment 0
+  a := 0 // comment 1
+  f := (){ a := a + 1; a } // comment 2
+  r := 0 // comment 3
+  
+  if f() > 1 { // comment 4 
+    r := 1 // comment 5
+  } else if f() > 1 { // comment 6
+    r := 2  // comment 7
+  } else if f() > 1 { // comment 8
+    r := 3 // comment 9
+  } else { // comment 10
+    r := 4 // comment 11
+  } // comment 12
+  "r" + r + "a" + a // comment 13
+  // comment 14
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('r2a2')
+})
