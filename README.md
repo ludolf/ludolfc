@@ -301,6 +301,10 @@ false.or(true)
 [1,2].eq([1,2])
 ```
 
+### Comments
+
+Any text starting with two slashes `//` will be ignored until the end of the line.
+
 ### Keywords
 
 All keywords are case-insensitive!
