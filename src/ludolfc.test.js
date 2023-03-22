@@ -204,3 +204,44 @@ test('comments', async () => {
   expect(res.type).toBe(lang.Types.STRING)
   expect(res.value).toBe('r2a2')
 })
+
+test('ctor', async () => {
+  const res = await ludolfC.execute(`
+  ctor := (a) {{
+    a: a
+  }}  
+  o := ctor(1)
+  o.a
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(1)
+})
+
+test('ctor #2', async () => {
+  const res = await ludolfC.execute(`
+  a := 1
+  ctor := (b) {{
+    a: a,
+    b: b
+  }}  
+  o := ctor(2)
+  "" + o.a + o.b
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('12')
+})
+
+test('ctor #3', async () => {
+  const res = await ludolfC.execute(`
+  a := {x:1}
+  ctor := (b) {{
+    a: a,
+    b: b
+  }}  
+  o := ctor({y:2})
+  o.a.x := 3
+  "" + o.a.x + o.b.y
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('32')
+})
