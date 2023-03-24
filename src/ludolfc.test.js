@@ -245,3 +245,48 @@ test('ctor #3', async () => {
   expect(res.type).toBe(lang.Types.STRING)
   expect(res.value).toBe('32')
 })
+
+test('ctor #4', async () => {
+  const res = await ludolfC.execute(`
+  f := (a) {{
+    a: a
+  }}  
+  o1 := f(1)
+  o2 := f(2)
+  "" + o1.a + o2.a
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('12')
+})
+
+test('ctor #5', async () => {
+  const res = await ludolfC.execute(`
+  f := (a) {{
+    a: a
+  }}  
+  o1 := f(1)
+  o2 := f(2)
+  o2.a := 3
+  "" + o1.a + o2.a
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('13')
+})
+
+test('ctor #6', async () => {
+  const res = await ludolfC.execute(`
+  f := (a) {
+    ctor := (a){{a:a}}  
+    {
+      a: ctor(a).a
+    }
+  }
+  o1 := f(1)
+  o2 := f(2)
+  o3 := f(3)
+  o3.a := 4
+  "" + o1.a + o2.a + o3.a
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('124')
+})

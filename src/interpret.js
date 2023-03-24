@@ -208,7 +208,8 @@ class Interpret {
         }
         
         try {
-            const result = await this.executeBlock(f.body, false)
+            const body = f.body.copy()
+            const result = await this.executeBlock(body, false)
             return result
 
         } finally {  // clean up variables

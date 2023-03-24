@@ -104,6 +104,9 @@ class Block {
         this.statements = statements
         this.source = source
     }
+    copy() {
+        return new Block(this.statements.map(s => s.copy()), this.source)
+    }
 }
 
 class Statement {
@@ -114,6 +117,14 @@ class Statement {
         this.isIf = false
         this.source = source
     }
+    copy() {
+        const c = new Statement(this.source)
+        c.isExpression = this.isExpression
+        c.isAssignment = this.isAssignment
+        c.isWhile = this.isWhile
+        c.isIf = this.isIf
+        return c
+    }
 }
 
 class Assignment extends Statement {
@@ -123,6 +134,12 @@ class Assignment extends Statement {
         this.left = left
         this.right = right
     }
+    copy() {
+        const c = super.copy()
+        c.left = this.left.copy()
+        c.right = this.right.copy()
+        return c
+    }
 }
 
 class While extends Statement {
@@ -131,6 +148,12 @@ class While extends Statement {
         this.isWhile = true
         this.condition = condition
         this.body = body
+    }
+    copy() {
+        const c = super.copy()
+        c.condition = this.condition.copy()
+        c.body = this.body.copy()
+        return c
     }
 }
 
@@ -142,6 +165,13 @@ class If extends Statement {
         this.body = body
         this.elseBody = bodyElse
     }
+    copy() {
+        const c = super.copy()
+        c.condition = this.condition.copy()
+        c.body = this.body.copy()
+        c.elseBody = this.elseBody?.copy()
+        return c
+    }
 }
 
 class Expression extends Statement {
@@ -149,6 +179,11 @@ class Expression extends Statement {
         super(source)
         this.isExpression = true
         this.parts = parts
+    }
+    copy() {
+        const c = super.copy()
+        c.parts = this.parts.map(p => p.copy())
+        return c
     }
 }
 
@@ -158,6 +193,9 @@ class Variable {
         this.name = name
         this.source = source
     }
+    copy() {
+        return this // immutable
+    }
 }
 
 class Operator {
@@ -165,6 +203,9 @@ class Operator {
         this.op = op
         this.isOperator = true
         this.precedence = precedence
+    }
+    copy() {
+        return this // immutable
     }
 }
 
@@ -297,6 +338,9 @@ class VarReference {
         this.varName = varName
         this.source = source
     }
+    copy() {
+        return this // immutable
+    }
 }
 
 class LangObject {
@@ -326,6 +370,11 @@ class LangObject {
     protectedAttributes() {
         return this.protected()
     }
+    copy() {
+        const valueCopy = {}
+        Object.keys(this.value).forEach(k => valueCopy[k] = this.value[k].copy())
+        return new LangObject(valueCopy, this.source)
+    }
 }
 
 class LangValueObject extends LangObject {
@@ -334,6 +383,9 @@ class LangValueObject extends LangObject {
 
         this.eq = new LangNativeFunction(x => new LangBoolean(this.value === x.value))
         this.ne = new LangNativeFunction(x => new LangBoolean(this.value !== x.value))
+    }
+    copy() {
+        return this // immutable
     }
 }
 
@@ -432,6 +484,11 @@ class LangArray extends LangValueObject {
     hasAttribute(name) {
         return FeatureLocalizations.SIZE.includes(name.toLowerCase()) || super.attribute(name, newValue)
     }
+    copy() {
+        const c = super.copy()
+        c.value = this.value.map(p => p.copy())
+        return c
+    }
 }
 
 class LangVoid extends LangValueObject {
@@ -466,6 +523,9 @@ class LangFunction {
     protectedAttributes() {
         return true
     }
+    copy() {
+        return new LangFunction(this.body, this.args, this.funcId, this.source)
+    }
 }
 
 class LangNativeFunction {
@@ -477,6 +537,9 @@ class LangNativeFunction {
     }
     call(...params) {
         return this.func(...params)
+    }
+    copy() {
+        return this // immutable
     }
 }
 
