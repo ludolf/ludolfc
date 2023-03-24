@@ -485,9 +485,7 @@ class LangArray extends LangValueObject {
         return FeatureLocalizations.SIZE.includes(name.toLowerCase()) || super.attribute(name, newValue)
     }
     copy() {
-        const c = super.copy()
-        c.value = this.value.map(p => p.copy())
-        return c
+        return new LangArray(this.value.map(p => p.copy()), this.source)
     }
 }
 

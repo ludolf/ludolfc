@@ -290,3 +290,21 @@ test('ctor #6', async () => {
   expect(res.type).toBe(lang.Types.STRING)
   expect(res.value).toBe('124')
 })
+
+test('ctor #7', async () => {
+  const res = await ludolfC.execute(`
+  f := (a) {
+    ctor := (a){{a:a}}  
+    {
+      a: [ctor(a).a]
+    }
+  }
+  o1 := f(1)
+  o2 := f(2)
+  o3 := f(3)
+  o3.a[0] := 4
+  "" + o1.a[0] + o2.a[0] + o3.a[0]
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('124')
+})
