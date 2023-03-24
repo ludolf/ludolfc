@@ -308,3 +308,48 @@ test('ctor #7', async () => {
   expect(res.type).toBe(lang.Types.STRING)
   expect(res.value).toBe('124')
 })
+
+test('immutable while body', async () => {
+  const res = await ludolfC.execute(`
+  i := 0
+  while i < 10 {
+    a := [i]
+    i := a[0] + 1
+  }
+  i
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(10)
+})
+
+test('immutable while body #2', async () => {
+  const res = await ludolfC.execute(`
+  i := 0
+  while i < 10 {
+    a := {index: i}
+    i := a.index + 1
+  }
+  i
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(10)
+})
+
+test('immutable while body #3', async () => {
+  const res = await ludolfC.execute(`
+  r := 0
+  i := 0
+  while i < 10 {
+    a := [i]
+    i := a[0] + 1
+    j := [0]
+    while j[0] < i {
+      j[0] := j[0] + 1
+      r := a[0] + j[0]
+    }
+  }
+  r
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(19)
+})

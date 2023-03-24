@@ -219,7 +219,9 @@ class Interpret {
     }
 
     async executeAssignment(assignment) {
-        if (!assignment.left || !assignment.right) throw new LangInterpretError(Errors.WRONG_ASSIGNMENT, assignment.source)
+        if (!assignment.left || !assignment.right) {
+            throw new LangInterpretError(Errors.WRONG_ASSIGNMENT, assignment.source)
+        }
         const value = await this.executeExpressionPart(assignment.right)        
         // variable assignment
         if (assignment.left.isVariable) {
@@ -239,7 +241,7 @@ class Interpret {
         while (true) {
             const cond = await this.executeExpressionPart(whileStm.condition)
             if (cond.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_CONDITION_VALUE, cond.source)
-            if (cond.value) await this.executeBlock(whileStm.body)
+            if (cond.value) await this.executeBlock(whileStm.body.copy())
             else break
         } 
     }

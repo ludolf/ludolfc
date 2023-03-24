@@ -118,12 +118,7 @@ class Statement {
         this.source = source
     }
     copy() {
-        const c = new Statement(this.source)
-        c.isExpression = this.isExpression
-        c.isAssignment = this.isAssignment
-        c.isWhile = this.isWhile
-        c.isIf = this.isIf
-        return c
+        return this // immutable
     }
 }
 
@@ -135,10 +130,7 @@ class Assignment extends Statement {
         this.right = right
     }
     copy() {
-        const c = super.copy()
-        c.left = this.left.copy()
-        c.right = this.right.copy()
-        return c
+        return new Assignment(this.left.copy(), this.right.copy(), this.source)
     }
 }
 
@@ -150,10 +142,7 @@ class While extends Statement {
         this.body = body
     }
     copy() {
-        const c = super.copy()
-        c.condition = this.condition.copy()
-        c.body = this.body.copy()
-        return c
+        return new While(this.condition.copy(), this.body.copy(), this.source)
     }
 }
 
@@ -166,11 +155,7 @@ class If extends Statement {
         this.elseBody = bodyElse
     }
     copy() {
-        const c = super.copy()
-        c.condition = this.condition.copy()
-        c.body = this.body.copy()
-        c.elseBody = this.elseBody?.copy()
-        return c
+        return new If(this.condition.copy(), this.body.copy(),this.elseBody?.copy(), this.source)
     }
 }
 
@@ -181,9 +166,7 @@ class Expression extends Statement {
         this.parts = parts
     }
     copy() {
-        const c = super.copy()
-        c.parts = this.parts.map(p => p.copy())
-        return c
+        return new Expression(this.parts.map(p => p.copy()), this.source)
     }
 }
 
