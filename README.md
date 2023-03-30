@@ -90,6 +90,10 @@ t := 1 != 2
 Void is a special data type with an empty value. Void is a result of statement 
 executions or calls of empty functions.
 
+### Comments
+
+Any text starting with two slashes `//` will be ignored until the end of the line.
+
 ### Arrays
 
 Arrays are heterogeneous collections of indexed elements whose index starts at 
@@ -301,9 +305,43 @@ false.or(true)
 [1,2].eq([1,2])
 ```
 
-### Comments
+#### Self reference 
 
-Any text starting with two slashes `//` will be ignored until the end of the line.
+Inside an object, a built-in attribute `$` can be used to access the object itself.
+
+```
+o := {
+    a: 1,
+    setA: (a) {
+        $.a := a
+    }
+}
+
+o.setA(2)
+
+o.a   // 2
+```
+
+#### Constructor functions
+
+Objects do not contain any special constructors, but can be constructed via
+functions that return objects:
+
+```
+Robot := (name, sernum, x, y) {{
+  name: name,
+  sernum: sernum,
+  position: { x: x, y: y },
+
+  move: (x, y) {
+    position.x := x
+    position.y := y
+  }
+}}
+
+ludolf := Robot('Ludolf', 'A001', 0, 0)
+euler := Robot('Euler', 'A002', 10, 20)
+```
 
 ### Keywords
 
@@ -313,7 +351,9 @@ All keywords are case-insensitive!
 
 ## Internationalization
 
-In order to be used in different native languages, LudolfC has several mutations of keywords and standard attributes. Other mutations are forseen in the future.
+In order to be used in different native languages, LudolfC has several 
+mutations of keywords and standard attributes. Other mutations are forseen 
+in the future.
 
 | Keyword   | German (de) | Czech (cs) |
 | --------- | ----------- | ---------- |

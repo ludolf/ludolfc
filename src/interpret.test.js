@@ -963,6 +963,13 @@ test('interpret object self #2', async () => {
   expect(result.value).toBe(3)
 })
 
+test('interpret object self #3', async () => {
+  const ast = parser.parse('o:={a:1,f:(a){\na:=a+1\n$.a:=a\na:=5}}\no.f(2)\no.a')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('NUMBER')
+  expect(result.value).toBe(3)
+})
+
 test('interpret string concat', async () => {
   const ast = parser.parse('"" + ""')
   const result = await interpret.execute(ast)
