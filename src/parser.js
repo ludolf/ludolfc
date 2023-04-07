@@ -121,6 +121,7 @@ class Parser {
         const openDefinitions = {
             arrays: 0,  // [
             objects: 0, // {
+            groups: 0, // (
         }
 
         for (; !source.finished(); source.move()) {
@@ -154,9 +155,11 @@ class Parser {
             if (']' === c) openDefinitions.arrays--
             if ('{' === c) openDefinitions.objects++
             if ('}' === c) openDefinitions.objects--
+            if ('(' === c) openDefinitions.groups++
+            if (')' === c) openDefinitions.groups--
 
             // end of the statement
-            if (isStatementSeparator(c) && !openDefinitions.arrays && !openDefinitions.objects) {
+            if (isStatementSeparator(c) && !openDefinitions.arrays && !openDefinitions.objects && !openDefinitions.groups) {
                 source.move()
                 break
             }

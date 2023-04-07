@@ -759,6 +759,28 @@ test('parse expression function call #7', () => {
   expect(ast.statements[0].parts[2].params[0].parts[2].value).toBe(2)
 })
 
+test('parse expression function call #8', () => {
+  const ast = parser.parse('f(1,\n2)')
+  expect(ast.statements).toHaveLength(1)
+  expect(ast.statements[0].isExpression).toBe(true)
+  expect(ast.statements[0].parts).toHaveLength(2)
+  expect(ast.statements[0].parts[0].isReference).toBe(true)
+  expect(ast.statements[0].parts[0].varName).toBe('f')
+  expect(ast.statements[0].parts[1].isOperator).toBe(true)
+  expect(ast.statements[0].parts[1].isAccess).toBe(true)
+  expect(ast.statements[0].parts[1].isCall).toBe(true)
+  expect(ast.statements[0].parts[1].op).toBe('()')
+  expect(ast.statements[0].parts[1].params).toHaveLength(2)
+  expect(ast.statements[0].parts[1].params[0].isExpression).toBe(true)
+  expect(ast.statements[0].parts[1].params[0].parts).toHaveLength(1)
+  expect(ast.statements[0].parts[1].params[0].parts[0].type).toBe('NUMBER')
+  expect(ast.statements[0].parts[1].params[0].parts[0].value).toBe(1)
+  expect(ast.statements[0].parts[1].params[1].isExpression).toBe(true)
+  expect(ast.statements[0].parts[1].params[1].parts).toHaveLength(1)
+  expect(ast.statements[0].parts[1].params[1].parts[0].type).toBe('NUMBER')
+  expect(ast.statements[0].parts[1].params[1].parts[0].value).toBe(2)
+})
+
 test('parse expression function def simplest', () => {
   const ast = parser.parse('(){}')
   expect(ast.statements).toHaveLength(1)
