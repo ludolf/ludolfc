@@ -1,6 +1,6 @@
 const lang = require('./lang')
 const Parser = require('./parser')
-const Interpret = require('./interpret')
+const Interpret = require('./interpreter')
 
 class LudolfC {
     /**

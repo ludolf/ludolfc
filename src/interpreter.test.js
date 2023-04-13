@@ -1,6 +1,6 @@
 const Parser = require('./parser')
 const parser = new Parser()
-const Interpret = require('./interpret')
+const Interpret = require('./interpreter')
 const interpret = new Interpret()
 
 test('interpret expression number simplest', async () => {

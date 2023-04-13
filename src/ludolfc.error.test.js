@@ -196,6 +196,19 @@ test('error parse #14', async () => {
   }
 })
 
+test('error parse #15', async () => {
+  try {
+    await ludolfC.execute('1+/2')
+    expect(true).toBe(false)  // reaching this point is not expected
+  } catch (e) {
+    expect(e.isLangError).toBe(true)
+    expect(e.isParseError).toBe(true)
+    expect(e.id).toBe(lang.Errors.UNEXPECTED_SYMBOL)
+    expect(e.line).toBe(1)
+    expect(e.col).toBe(1)
+  }
+})
+
 test('error interpret', async () => {
   try {
     await ludolfC.execute('x')

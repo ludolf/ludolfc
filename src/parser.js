@@ -122,6 +122,7 @@ class Parser {
             arrays: 0,  // [
             objects: 0, // {
             groups: 0, // (
+            ops: 0, // + - * / < > <= >=
         }
 
         for (; !source.finished(); source.move()) {
@@ -157,9 +158,12 @@ class Parser {
             if ('}' === c) openDefinitions.objects--
             if ('(' === c) openDefinitions.groups++
             if (')' === c) openDefinitions.groups--
+            
+            if ('+' === c || '-' === c || '*' === c || '/' === c || '<' === c || '>' === c || '=' === c) openDefinitions.ops++
+            else openDefinitions.ops && !isSpace(c, true) && openDefinitions.ops--
 
             // end of the statement
-            if (isStatementSeparator(c) && !openDefinitions.arrays && !openDefinitions.objects && !openDefinitions.groups) {
+            if (isStatementSeparator(c) && !openDefinitions.arrays && !openDefinitions.objects && !openDefinitions.groups && !openDefinitions.ops) {
                 source.move()
                 break
             }
@@ -240,12 +244,9 @@ class Parser {
                     throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.absPos(), c)
                 }
                 // return the list of tokens and operators
-                if (parts.length) {
-                    if (parts[parts.length - 1].isOperator && !parts[parts.length - 1].isAccess) {
-                        throw new LangParseError(Errors.UNEVEN_OPERATORS, source.absPos())
-                    }
+                if (parts.length && (!parts[parts.length - 1].isOperator || parts[parts.length - 1].isAccess))
                     return new Expression(parts, source.absPos())
-                }
+                
                 source.move()
                 continue
             }
@@ -371,12 +372,16 @@ class Parser {
                 }
             }
 
-            if (parts.length && (!parts[parts.length - 1].isOperator || parts[parts.length - 1].isAccess)) 
-                throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.absPos(), source.currentChar())
+            if (rightOperatorExpected()) throw new LangParseError(Errors.UNEXPECTED_SYMBOL, source.absPos(), source.currentChar())
 
             const exp = this.parseMemberExpression(source)
             parts.push(exp)
         }
+
+        // after finished, the statement must be complete
+        if (endsWithOperator()) throw new LangParseError(Errors.UNEVEN_OPERATORS, source.absPos() - 1) 
+
+        // ///////////////////////////////////////////
 
         function leftOperatorExpected() {
             return !parts.length || (parts[parts.length - 1].isOperator && !parts[parts.length - 1].isAccess)
@@ -384,6 +389,10 @@ class Parser {
 
         function rightOperatorExpected() {
             return parts.length && (!parts[parts.length - 1].isOperator || parts[parts.length - 1].isAccess)
+        }
+
+        function endsWithOperator() {
+            return parts.length && (parts[parts.length - 1].isOperator && !parts[parts.length - 1].isAccess)
         }
     }
 
@@ -664,8 +673,8 @@ function isKeyword(str) {
     return Object.values(Keywords).some(k => k.includes(str)) ||  Keywords.WHILE.includes(str) || Keywords.IF.includes(str)
 }
 
-function isSpace(c) {
-    return '\n' !== c && /\s+/g.test(c)
+function isSpace(c, newlines = false) {
+    return ('\n' !== c || newlines) && /\s+/g.test(c)
 }
 
 function isExpressionSeparator(c) {
@@ -696,15 +705,15 @@ function isFunctionDef(remaining) {
 }
 
 function isWhileDef(remaining) {
-    return Keywords.WHILE.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining)) 
+    return Keywords.WHILE.some(k => new RegExp(`^\\s*${k}\\s(.+)\\s{`, 's').test(remaining)) 
 }
 
 function isIfDef(remaining) {
-    return Keywords.IF.some(k => new RegExp(`^\\s*${k}\\s(.*)\\s{`).test(remaining))
+    return Keywords.IF.some(k => new RegExp(`^\\s*${k}\\s(.+)\\s{`, 's').test(remaining))
 }
 
 function isElseDef(remaining) {
-    return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+{`).test(remaining)) 
+    return Keywords.ELSE.some(k => new RegExp(`^\\s*${k}\\s+{`, 's').test(remaining)) 
 }
 
 function isElseIfDef(remaining) {

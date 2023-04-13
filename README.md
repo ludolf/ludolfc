@@ -3,6 +3,9 @@
 
 LudolfC is a simple programming language for learning concepts of structured, 
     object-oriented and functional programming.
+
+The **internationalization of keywords** and the standard library provides 
+    worldwide language support.
     
 Check it out online at https://ludolfc.github.io
 
@@ -341,6 +344,20 @@ Robot := (name, sernum, x, y) {{
 
 ludolf := Robot('Ludolf', 'A001', 0, 0)
 euler := Robot('Euler', 'A002', 10, 20)
+```
+
+### Explicit separators
+
+Newlines are implicit separators of statements. The semicolon `;` can be used 
+    as an explicit separator.
+
+```
+x := 1; y := x
+
+// is the same as
+
+x := 1
+y := x
 ```
 
 ### Keywords
