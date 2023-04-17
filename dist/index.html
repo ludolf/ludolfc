@@ -7,23 +7,28 @@
     <meta charset="utf-8">
     <script src="ludolfc.js"></script>
     <style>
-        body { margin: 2rem; }
+        body { margin: 1rem 2rem; }
         h1 { font-size: 2rem; }
-        #code { font-size: 1.2rem; width: 100%; padding: 1rem; background-color: beige; box-sizing: border-box; }
+        #code { font-size: 1.2rem; width: 100%; padding: 1rem; background-color: linen; box-sizing: border-box; }
         #run { font-size: 1.5rem; font-weight: bold; padding: 0.5em 3em; }
         #result { font-size: 1.5rem; color: blue; }
         .error { color: red !important; }
+        .logo { padding-left: 1rem; display: flex; }
+        .logo img { width: 12rem; }
+        .logo h1 { padding: 0 1rem; }
         @media (max-width: 600px) {
-            body { margin: 1rem; }
+            body { margin: 0.5rem 1rem; }
             h1 { font-size: 1.2rem; }
             #code { font-size: 0.8rem; }
             #run { font-size: 0.8rem; }
             #result { font-size: 1rem;  }
+            .logo img { width: 6rem; }
+            .logo h1 { padding: 0 0.8rem; }
         }
     </style>
   </head>
   <body>
-    <h1>LudolfC Programming Language</h1>
+    <div class="logo"><img src="https://raw.githubusercontent.com/ludolf/ludolfc/main/logo.svg" alt="LudolfC Programming Language"/><h1>Interpreter</h1></div>
     <form>
         <div>
             <textarea id="code" rows="20" spellcheck="false" wrap="off">
@@ -88,5 +93,7 @@ insertionSort([8,5,6,3,2,1,7,9,4])
                    obj.isFunction ? '[function]' : JSON.stringify(obj)
         }
     </script>
+
+    <a href="https://github.com/ludolf/ludolfc"><img decoding="async" loading="lazy" width="120" height="120" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_darkblue_121621.png?resize=149%2C149" class="attachment-full size-full" alt="LudolfC on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; width: 8em; height: 8em;"></a>
   </body>
 </html>

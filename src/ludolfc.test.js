@@ -353,3 +353,97 @@ test('immutable while body #3', async () => {
   expect(res.type).toBe(lang.Types.NUMBER)
   expect(res.value).toBe(19)
 })
+
+test('short-circuit', async () => {
+  const res = await ludolfC.execute(`
+  x := 1
+  y := false & (){ x := 2 }()
+  x
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(1)
+})
+
+test('closures: counter', async () => {
+  const res = await ludolfC.execute(`
+  makeCounter := (init) {
+    i := init
+    count := (){
+      i := i + 1
+      i
+    }
+    count
+  }
+  counter := makeCounter(100)
+  counter()
+  counter()
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(102)
+})
+
+test('closures: counter #2', async () => {
+  const res = await ludolfC.execute(`
+  makeCounter := (init) {
+    i := init
+    (){
+      i := i + 1
+      i
+    }
+  }
+  counter := makeCounter(100)
+  counter()
+  counter()
+  `)
+  expect(res.type).toBe(lang.Types.NUMBER)
+  expect(res.value).toBe(102)
+})
+
+test('closures: globals', async () => {
+  const res = await ludolfC.execute(`
+  x := 1
+  f := (){x}
+  x1 := f()
+  x2 := 0
+  (x) {
+    x := x + 1
+    x2 := f()
+  }(2)
+
+  "" + x1 + "=" + x2
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('1=1')
+})
+
+test('closures: globals #2', async () => {
+  const res = await ludolfC.execute(`
+  x := 1
+  f := (){x}
+  x1 := f()
+  x2 := 0
+  (x) {
+    x2 := f()
+  }(2)
+
+  "" + x1 + "=" + x2
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('1=1')
+})
+
+test('closures: effects due to no variable declarations', async () => {
+  const res = await ludolfC.execute(`
+  x := 1 // #1
+  () {
+    f := (){x}
+    x1 := f()
+    x := 2      // it is a reference to the global 'x' from line #1 
+    x2 := f()
+    
+    "" + x1 + "=" + x2
+  }()
+  `)
+  expect(res.type).toBe(lang.Types.STRING)
+  expect(res.value).toBe('1=2') 
+})

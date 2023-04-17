@@ -256,6 +256,17 @@ x := 1
 f := (a){(){x+a()}}
 g := f((){x})
 g()
+
+makeCounter := (init) {
+  i := init
+  (){
+    i := i + 1
+    i
+  }
+}
+counter := makeCounter(100)
+counter()   // 101
+counter()   // 102
 ```
 
 ### Objects
