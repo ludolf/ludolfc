@@ -6,10 +6,10 @@ LudolfC is a simple programming language for learning concepts of structured,
 
 The **internationalization of keywords** and the standard library provides 
     worldwide language support.
-    
-Check it out online at https://ludolfc.github.io
 
-<img src="logo.svg" style="width: 20rem; float: right;" align="right">
+<img src="logo.svg" style="width: 20rem; float: right; margin: 1rem 0" align="right">
+
+Check it out online at [ludolfc.github.io](https://ludolfc.github.io)
 
 ## Language Overview
 
