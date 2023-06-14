@@ -83,7 +83,7 @@ t := 1 != 2
 
 | Feature   | Operation             | Return type | Example                     |
 | --------- | --------------------- | ----------- | --------------------------- |
-| `nand`    | logical negation      | Boolean     | `true.neg() = false`        |
+| `neg`     | logical negation      | Boolean     | `true.neg() = false`        |
 | `and`     | logical conjunction   | Boolean     | `true.and(false) = false`   |
 | `or`      | logical disjunction   | Boolean     | `true.or(false) = true`     |
 | `xor`     | exclusive disjunction | Boolean     | `true.xor(true) = false`    |
