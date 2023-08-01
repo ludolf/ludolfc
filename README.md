@@ -4,12 +4,17 @@
 LudolfC is a simple programming language for learning concepts of structured, 
     object-oriented and functional programming.
 
+Created to support the textbook [Computer Science for Kids](https://leanpub.com/computerscienceforkids) 
+  (editions: [English](https://leanpub.com/computerscienceforkids), 
+             [German](https://leanpub.com/informatik-fuer-kinder/), 
+             [Czech](https://leanpub.com/informatika-pro-deti/))
+
 The **internationalization of keywords** and the standard library provides 
     worldwide language support.
 
 <img src="logo.svg" style="width: 20rem; float: right; margin: 1rem 0" align="right">
 
-Check it out online at [ludolfc.github.io](https://ludolfc.github.io)
+Check it out in action at [ludolfc.github.io](https://ludolfc.github.io)
 
 ## Language Overview
 
