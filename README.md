@@ -391,7 +391,7 @@ in the future.
 | Keyword   | German (de) | Czech (cs) |
 | --------- | ----------- | ---------- |
 | `true`    | `wahr`      | `pravda`   |
-| `false`   | `unwahr`    | `nepravda` |
+| `false`   | `falsch`    | `nepravda` |
 | `if`      | `falls`     | `pokud`    |
 | `else`    | `sonst`     | `jinak`    |
 | `while`   | `solange`   | `dokud`    |

@@ -1,6 +1,6 @@
 const Keywords = {
     TRUE: ['true', 'pravda', 'wahr'],
-    FALSE: ['false', 'nepravda', 'unwahr'],
+    FALSE: ['false', 'nepravda', 'falsch'],
     IF: ['if', 'pokud', 'falls'],
     ELSE: ['else', 'jinak', 'sonst'],
     WHILE: ['while', 'dokud', 'solange'],
@@ -227,6 +227,7 @@ class BiOperator extends Operator {
         this.isBi = true
         this.precedence = this.getPrecedence()
         this.isAddition = '+' === op
+        this.isShortCircuit = '&' === op || '|' === op
         this.source = source
     }
     apply(a, b) {
@@ -449,7 +450,7 @@ class LangArray extends LangValueObject {
     element(indexes, newValue) {
         return indexes.reduce((a,c,i) => {
             const index = Math.ceil(c.value)
-            if (index < 0 || index >= a.value.length) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS)
+            if (index < 0 || index >= a.value.length) throw new LangError(Errors.ARRAY_INDEX_OUT_BOUNDS, null, index)
             const v = a.value[index]
             // set the value for the last element
             if (newValue && i === indexes.length - 1)
