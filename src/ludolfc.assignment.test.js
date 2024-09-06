@@ -232,15 +232,29 @@ test('assignment boolean true upper localized', async () => {
   expect(ludolfC.getVariable('b').value).toBe(true)
 })
 
-test('assignment boolean false localized', async () => {
+test('assignment boolean false localized - czech', async () => {
   await ludolfC.execute('b := nepravda')
   expect(ludolfC.hasVariable('b')).toBe(true)
   expect(ludolfC.getVariable('b').type).toBe('BOOLEAN')
   expect(ludolfC.getVariable('b').value).toBe(false)
 })
 
-test('assignment boolean false upper localized', async () => {
+test('assignment boolean false upper localized - czech', async () => {
   await ludolfC.execute('b := NEpravda')
+  expect(ludolfC.hasVariable('b')).toBe(true)
+  expect(ludolfC.getVariable('b').type).toBe('BOOLEAN')
+  expect(ludolfC.getVariable('b').value).toBe(false)
+})
+
+test('assignment boolean false localized - german', async () => {
+  await ludolfC.execute('b := falsch')
+  expect(ludolfC.hasVariable('b')).toBe(true)
+  expect(ludolfC.getVariable('b').type).toBe('BOOLEAN')
+  expect(ludolfC.getVariable('b').value).toBe(false)
+})
+
+test('assignment boolean false upper localized - german', async () => {
+  await ludolfC.execute('b := FAlscH')
   expect(ludolfC.hasVariable('b')).toBe(true)
   expect(ludolfC.getVariable('b').type).toBe('BOOLEAN')
   expect(ludolfC.getVariable('b').value).toBe(false)

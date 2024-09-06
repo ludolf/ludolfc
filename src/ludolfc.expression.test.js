@@ -56,6 +56,36 @@ test('expression boolean simplest #5', async () => {
   expect(result.value).toBe(true)
 })
 
+test('expression boolean precedence #1', async () => {
+  const result = await ludolfC.execute('true | false & false')
+  expect(result.value).toBe(true)
+})
+
+test('expression boolean precedence #2', async () => {
+  const result = await ludolfC.execute('true | true & false')
+  expect(result.value).toBe(true)
+})
+
+test('expression boolean precedence #3', async () => {
+  const result = await ludolfC.execute('true | false & true')
+  expect(result.value).toBe(true)
+})
+
+test('expression boolean precedence #4', async () => {
+  const result = await ludolfC.execute('(true | false) & false')
+  expect(result.value).toBe(false)
+})
+
+test('expression boolean precedence #5', async () => {
+  const result = await ludolfC.execute('(true | false) & true')
+  expect(result.value).toBe(true)
+})
+
+test('expression boolean precedence #6', async () => {
+  const result = await ludolfC.execute('true | (false & false)')
+  expect(result.value).toBe(true)
+})
+
 test('expression string simplest empty', async () => {
   const result = await ludolfC.execute('""')
   expect(result.value).toBe('')

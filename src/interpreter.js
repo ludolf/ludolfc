@@ -46,27 +46,24 @@ class Interpret {
 
     async executeExpressionParts(parts, assignNewValue = null) {
         // logical operators short circuit
-        let index = findFirstOp('&')
-        if (index) {
-            const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
-            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
-            if (!left.value) return left
-            const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
-            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
-            return right
+        const executeShortCircuitExpressionParts = async (op, parts, assignNewValue, shouldShortCircuit) => {
+            const index = findFirstOp(op)
+            if (index) {
+                const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
+                if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
+                if (shouldShortCircuit(left.value)) return left
+                const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
+                if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
+                return right
+            }
         }
-        index = findFirstOp('|')
-        if (index) {
-            const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
-            if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
-            if (left.value) return left
-            const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
-            if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
-            return right
-        }
+        const expOr = await executeShortCircuitExpressionParts('|', parts, assignNewValue, value => value)
+        if (expOr) return expOr
+        const expAnd = await executeShortCircuitExpressionParts('&', parts, assignNewValue, value => !value)
+        if (expAnd) return expAnd
 
         // left to right by precendence
-        let assignApplied = false
+        let index, assignApplied = false
         while ((index = findNextOp()) > -1) {
             const op = parts[index]
 

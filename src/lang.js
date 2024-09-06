@@ -227,7 +227,6 @@ class BiOperator extends Operator {
         this.isBi = true
         this.precedence = this.getPrecedence()
         this.isAddition = '+' === op
-        this.isShortCircuit = '&' === op || '|' === op
         this.source = source
     }
     apply(a, b) {

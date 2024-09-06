@@ -137,6 +137,13 @@ test('interpret expression numbers ops block', async () => {
 })
 
 test('interpret expression boolean op precedence', async () => {
+  const ast = parser.parse('true | false & false')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret expression boolean op precedence #1', async () => {
   const ast = parser.parse('false | true & false')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
@@ -154,7 +161,7 @@ test('interpret expression boolean op precedence #3', async () => {
   const ast = parser.parse('true | true & false')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
-  expect(result.value).toBe(false)
+  expect(result.value).toBe(true)
 })
 
 test('interpret expression boolean op precedence #4', async () => {
@@ -1595,10 +1602,10 @@ test('interpret or evaluation #2', async () => {
 })
 
 test('interpret short circuit', async () => {
-  const ast = parser.parse('true | x & false & y')
+  const ast = parser.parse('true | (x & false & y)')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
-  expect(result.value).toBe(false)
+  expect(result.value).toBe(true)
 })
 
 test('interpret short circuit #2', async () => {
@@ -1616,10 +1623,10 @@ test('interpret short circuit #3', async () => {
 })
 
 test('interpret short circuit #4', async () => {
-  const ast = parser.parse('1 > 0 | x & 1 < 0 & y')
+  const ast = parser.parse('1 > 0 | (x & 1 < 0 & y)')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
-  expect(result.value).toBe(false)
+  expect(result.value).toBe(true)
 })
 
 test('interpret short circuit #5', async () => {
@@ -1631,6 +1638,111 @@ test('interpret short circuit #5', async () => {
 
 test('interpret short circuit #6', async () => {
   const ast = parser.parse('1 < 0 & x | 2 < 1')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #7', async () => {
+  const ast = parser.parse('true | x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit #8', async () => {
+  const ast = parser.parse('false & x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #9', async () => {
+  const ast = parser.parse('true | false & x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit #10', async () => {
+  const ast = parser.parse('0 > 1 & x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #11', async () => {
+  const ast = parser.parse('i := 0; i > 1 & x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #12', async () => {
+  const ast = parser.parse('false & [][0]')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #13', async () => {
+  const ast = parser.parse('false & a[0]')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #14', async () => {
+  const ast = parser.parse('false & o.x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #15', async () => {
+  const ast = parser.parse('false & {}.x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #16', async () => {
+  const ast = parser.parse('7 - 5 > 3 & x')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #17', async () => {
+  const ast = parser.parse('7 - 5 > 3 | 1 < 0 - 2')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #18', async () => {
+  const ast = parser.parse('7 - 5 > 3 | 1 > 0 + 2')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #19', async () => {
+  const ast = parser.parse('3 < 7 - 5 | 0 - 2 > 1')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(false)
+})
+
+test('interpret short circuit #20', async () => {
+  const ast = parser.parse('3 < 7 - 5 | 0 + 2 > 1')
+  const result = await interpret.execute(ast)
+  expect(result.type).toBe('BOOLEAN')
+  expect(result.value).toBe(true)
+})
+
+test('interpret short circuit #21', async () => {
+  const ast = parser.parse('1 > 2 & [[]][0][0]')
   const result = await interpret.execute(ast)
   expect(result.type).toBe('BOOLEAN')
   expect(result.value).toBe(false)
