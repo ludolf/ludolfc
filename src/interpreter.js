@@ -46,22 +46,17 @@ class Interpret {
 
     async executeExpressionParts(parts, assignNewValue = null) {
         // logical operators short circuit
-        const executeShortCircuitExpressionParts = async (op, parts, assignNewValue, shouldShortCircuit) => {
+        for (const op of ['|', '&']) {
             const index = findFirstOp(op)
             if (index) {
                 const left = await this.executeExpressionParts(parts.slice(0, index), assignNewValue)
                 if (left.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, left.source)
-                if (shouldShortCircuit(left.value)) return left
+                if (shouldShortCircuit(op, left.value)) return left
                 const right = await this.executeExpressionParts(parts.slice(index + 1), assignNewValue)
                 if (right.type !== Types.BOOLEAN) throw new LangInterpretError(Errors.WRONG_BI_OPERATOR_SUBJECTS, right.source)
                 return right
             }
         }
-        const expOr = await executeShortCircuitExpressionParts('|', parts, assignNewValue, value => value)
-        if (expOr) return expOr
-        const expAnd = await executeShortCircuitExpressionParts('&', parts, assignNewValue, value => !value)
-        if (expAnd) return expAnd
-
         // left to right by precendence
         let index, assignApplied = false
         while ((index = findNextOp()) > -1) {
@@ -148,6 +143,10 @@ class Interpret {
         function findFirstOp(op) {
             for (let i = 0; i < parts.length; i++)
                 if (parts[i].isBi && parts[i].op === op) return i
+        }
+
+        function shouldShortCircuit(op, value) {
+            return '|' === op && value || '&' === op && !value
         }
     }
 
